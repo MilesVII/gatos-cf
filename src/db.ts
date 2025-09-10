@@ -106,37 +106,29 @@ export const migrations: Record<string, (db: Kysely<Database>) => Promise<void>>
 				}
 			});
 
-		for (const chonk of chunk(posts, 20)) {
-			await db.transaction().execute(async trx => {
-				for (const post of chonk) {
-					await trx
-						.insertInto("posts")
-						.values(post)
-						.execute();
-				}
-			});
+		for (const post of posts) {
+			await db
+				.insertInto("posts")
+				.values(post)
+				.execute();
 		}
 
 		const tags = new Set<string>(pairs.map(([, tag]) => tag));
-		await db.transaction().execute(async trx => {
-			for (const tag of tags) {
-				await trx
-					.insertInto("tags")
-					.values({ name: tag })
-					.execute();
-			}
-		});
+		for (const tag of tags) {
+			await db
+				.insertInto("tags")
+				.values({ name: tag })
+				.execute();
+		}
 
 		const indexedTags = await db.selectFrom("tags").selectAll().execute();
-		await db.transaction().execute(async trx => {
-			for (const [post, tag] of pairs) {
-				const tagId = indexedTags.find(({ name }) => name === tag)!.id;
+		for (const [post, tag] of pairs) {
+			const tagId = indexedTags.find(({ name }) => name === tag)!.id;
 
-				await trx
-					.insertInto("pairs")
-					.values({ post, tag: tagId })
-					.execute();
-			}
-		});
+			await db
+				.insertInto("pairs")
+				.values({ post, tag: tagId })
+				.execute();
+		}
 	}
 }

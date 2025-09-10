@@ -4,7 +4,7 @@ import { Database, migrations } from "./db";
 import { routes } from "./api";
 import { nothrow } from "./utils";
 
-const MIGRATIONS_EXPOSED = true;
+const MIGRATIONS_EXPOSED = false;
 
 const respond = (status: number, body: BodyInit | null = null) => {
 	return new Response(body, { status })
@@ -36,14 +36,14 @@ export default {
 		const params = paramsResult.success ? paramsResult.value : null; 
 
 		switch (route) {
-			case("/user/register"): {
+			case("/api/user/register"): {
 				if (typeof params?.login !== "string")    return respond(400);
 				if (typeof params?.password !== "string") return respond(400);
 
 				await routes[route](state, params.login, params.password);
 				return respond(200);
 			}
-			case("/user/signin"): {
+			case("/api/user/signin"): {
 				if (typeof params?.login !== "string")    return respond(400);
 				if (typeof params?.password !== "string") return respond(400);
 				if (typeof params?.info !== "string")     return respond(400);
@@ -53,12 +53,12 @@ export default {
 				if (result.result?.success) return respond(200, result.result.value);
 				else return respond(401, result.result?.error)
 			}
-			case("/user/signoff"): {
+			case("/api/user/signoff"): {
 				const result = await routes[route](state);
 				if (result.clearance === "ok") return respond(200);
 				else return respond(401, result.clearance);
 			}
-			case("/user/change"): {
+			case("/api/user/change"): {
 				if (typeof params?.newPassword !== "string") return respond(400);
 
 				const result = await routes[route](state, params.newPassword);
