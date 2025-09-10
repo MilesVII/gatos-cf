@@ -1,5 +1,5 @@
 import { Generated, Kysely } from "kysely";
-import { password } from "./utils";
+import { chunk, password } from "./utils";
 import dump from "./dump_6.json"
 
 type Post = {
@@ -92,12 +92,51 @@ export const migrations: Record<string, (db: Kysely<Database>) => Promise<void>>
 			.execute();
 	},
 	fill: async db => {
-		const posts = dump.posts.map<Post>(post => ({
-			id: `vk${post.postId}`,
-			caption: post.text,
-			media: post.photos.map(photo => photo.url).join("\n"),
-			source: `https://vk.com/memy_pro_kotow?w=wall-95648824_${post.postId}`
-		}));
-		await db.insertInto("posts").values(posts).execute();
+		const pairs: [id: string, tag: string][] = [];
+		const posts = dump.posts
+			.sort((a, b) => a.postId - b.postId)
+			.map<Post>(post => {
+				const id = `vk${post.postId}`;
+				pairs.push(...post.tags.map(t => ([id, t] as [string, string])));
+				return {
+					id,
+					caption: post.text,
+					media: post.photos.map(photo => photo.url).join("\n"),
+					source: `https://vk.com/memy_pro_kotow?w=wall-95648824_${post.postId}`
+				}
+			});
+
+		for (const chonk of chunk(posts, 20)) {
+			await db.transaction().execute(async trx => {
+				for (const post of chonk) {
+					await trx
+						.insertInto("posts")
+						.values(post)
+						.execute();
+				}
+			});
+		}
+
+		const tags = new Set<string>(pairs.map(([, tag]) => tag));
+		await db.transaction().execute(async trx => {
+			for (const tag of tags) {
+				await trx
+					.insertInto("tags")
+					.values({ name: tag })
+					.execute();
+			}
+		});
+
+		const indexedTags = await db.selectFrom("tags").selectAll().execute();
+		await db.transaction().execute(async trx => {
+			for (const [post, tag] of pairs) {
+				const tagId = indexedTags.find(({ name }) => name === tag)!.id;
+
+				await trx
+					.insertInto("pairs")
+					.values({ post, tag: tagId })
+					.execute();
+			}
+		});
 	}
 }

@@ -27,3 +27,11 @@ export async function nothrow<T>(cb: () => Promise<T>): Promise<Result<T, string
 		return { success: false, error: (e as Error)?.name ?? "unknown" }
 	}
 }
+
+export function chunk<T>(a: T[], chunksize: number) {
+	let r = [];
+	for (let i = 0; i < a.length; i += chunksize){
+		r.push(a.slice(i, i + chunksize));
+	}
+	return r;
+}

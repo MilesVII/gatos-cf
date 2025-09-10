@@ -4,7 +4,7 @@ import { Database, migrations } from "./db";
 import { routes } from "./api";
 import { nothrow } from "./utils";
 
-const MIGRATIONS_EXPOSED = false;
+const MIGRATIONS_EXPOSED = true;
 
 const respond = (status: number, body: BodyInit | null = null) => {
 	return new Response(body, { status })
