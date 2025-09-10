@@ -1,18 +1,12 @@
 import { type Kysely } from "kysely";
 import { type Database } from "./db";
-import { password } from "./utils";
+import { password, Result } from "./utils";
 
 type State = {
 	db: Kysely<Database>,
 	token?: string
 };
 
-type Result<T, E> = {
-	error: null,
-	value: T
-} | {
-	error: E
-};
 type ProtectedResult<T> = {
 	clearance: Awaited<ReturnType<typeof auth>>,
 	result: T | null
@@ -61,8 +55,8 @@ async function signin({ db }: State, login: string, pwd: string, info: string): 
 		.selectAll()
 		.where("login", "=", login)
 		.executeTakeFirst();
-	if (!user) return { error: "nouser" };
-	if (user.password !== await password(pwd)) return { error: "password" };
+	if (!user) return { success: false, error: "nouser" };
+	if (user.password !== await password(pwd)) return { success: false, error: "password" };
 
 	const token = crypto.randomUUID();
 	await db
@@ -70,7 +64,7 @@ async function signin({ db }: State, login: string, pwd: string, info: string): 
 		.values({ user: user.id, value: token, info, expiry: "none" })
 		.execute();
 
-	return { error: null, value: token };
+	return { success: true, value: token };
 }
 
 async function signoff({ db, token }: State): Promise<boolean> {

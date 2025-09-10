@@ -2,6 +2,7 @@ import { Kysely } from "kysely";
 import { D1Dialect } from "kysely-d1";
 import { Database, migrations } from "./db";
 import { routes } from "./api";
+import { nothrow } from "./utils";
 
 const MIGRATIONS_EXPOSED = false;
 
@@ -11,7 +12,7 @@ const respond = (status: number, body: BodyInit | null = null) => {
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
-		if (request.method !== "POST") return respond(403);
+		if (request.method !== "POST") return respond(405);
 
 		const db = new Kysely<Database>({ dialect: new D1Dialect({ database: env.gatos }) });
 		const migrationRequest = request.headers.get("x-admin-migrate");
@@ -25,16 +26,52 @@ export default {
 			return respond(200);
 		}
 
-		return respond(200);
-		// const token = request.headers.get("authorization") ?? undefined;
-		// const url = new URL(request.url);
-		// console.log(url.pathname);
-		// const route = routes[url.pathname];
-		// if (!route) return respond(404);
+		const url = new URL(request.url);
+		const route = pickRoute(url.pathname);
+		if (!route) return respond(501);
 
-		// return respond(200, route())
-		// const r = await db.selectFrom("users").selectAll().execute();
+		const token = request.headers.get("authorization") ?? undefined;
+		const state = { db, token };
+		const paramsResult = await nothrow<any>(async () => await request.json());
+		const params = paramsResult.success ? paramsResult.value : null; 
 
-		// return respond(200, JSON.stringify(r));
+		switch (route) {
+			case("/user/register"): {
+				if (typeof params?.login !== "string")    return respond(400);
+				if (typeof params?.password !== "string") return respond(400);
+
+				await routes[route](state, params.login, params.password);
+				return respond(200);
+			}
+			case("/user/signin"): {
+				if (typeof params?.login !== "string")    return respond(400);
+				if (typeof params?.password !== "string") return respond(400);
+				if (typeof params?.info !== "string")     return respond(400);
+
+				const result = await routes[route](state, params.login, params.password, params.info);
+				if (result.clearance !== "ok") return respond(401, result.clearance);
+				if (result.result?.success) return respond(200, result.result.value);
+				else return respond(401, result.result?.error)
+			}
+			case("/user/signoff"): {
+				const result = await routes[route](state);
+				if (result.clearance === "ok") return respond(200);
+				else return respond(401, result.clearance);
+			}
+			case("/user/change"): {
+				if (typeof params?.newPassword !== "string") return respond(400);
+
+				const result = await routes[route](state, params.newPassword);
+				if (result.clearance === "ok") return respond(200);
+				else return respond(401, result.clearance);
+			}
+		}
 	}
 } satisfies ExportedHandler<Env>;
+
+function pickRoute(pathname: string): (keyof typeof routes) | null {
+	if (!Object.keys(routes).includes(pathname)) {
+		return null;
+	}
+	return pathname as keyof typeof routes;
+}
