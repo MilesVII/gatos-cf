@@ -1,0 +1,49 @@
+
+:root {
+	--font-main: normal 400 17px/22px "Roboto";
+	--font-butt: normal 500 17px/22px "Roboto";
+
+	--color-back: #021526;
+	--color-fore: #03346E;
+	--color-main: #6EACDA;
+	--color-acnt: #E2E2B6;
+	--color-text: #FCFDFD;
+
+	--radius-block: 16px;
+	--radius-small: 8px;
+
+	--padding-input: 8px;
+
+	background-color: var(--color-back);
+	color-scheme: dark;
+
+	font: var(--font-main);
+	color: var(--color-text);
+}
+
+* {
+	box-sizing: border-box;
+}
+
+#app, body, html {
+	margin: 0;
+	border: 0;
+	padding: 0;
+}
+
+.strip-defaults {
+	appearance: none;
+	color: inherit;
+	background: none;
+	font: inherit;
+	outline: inherit;
+	border: none;
+}
+
+body {
+	display: flex;
+	flex-flow: column nowrap;
+	align-items: center;
+	justify-content: center;
+	min-height: 100vh;
+}

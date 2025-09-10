@@ -3,13 +3,16 @@
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
-		"deploy": "wrangler deploy",
-		"dev": "wrangler dev",
-		"start": "wrangler dev",
+		"deploy": "npm run watch && wrangler deploy",
+		"build": "esbuild src/page/index.ts --bundle --sourcemap --outfile=page/index.js",
+		"watch": "esbuild src/page/index.ts --bundle --sourcemap --watch --outfile=page/index.js",
+		"dev": "concurrently \"npm run watch\" \"wrangler dev\"",
 		"cf-typegen": "wrangler types"
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.8.19",
+		"concurrently": "^9.2.1",
+		"esbuild": "^0.25.9",
 		"typescript": "^5.5.2",
 		"wrangler": "^4.34.0"
 	},

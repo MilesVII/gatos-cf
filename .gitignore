@@ -167,3 +167,5 @@ dist
 .wrangler/
 
 src/dump*.json
+page/*.js
+page/*.js.map

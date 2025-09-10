@@ -27,10 +27,10 @@ function guarded<T extends any[], R>(
 };
 
 export const routes = {
-	"/user/register": guarded( true, register),
-	"/user/signin":   guarded(false, signin),
-	"/user/signoff":  guarded( true, signoff),
-	"/user/change":   guarded( true, changePassword)
+	"/api/user/register": guarded( true, register),
+	"/api/user/signin":   guarded(false, signin),
+	"/api/user/signoff":  guarded( true, signoff),
+	"/api/user/change":   guarded( true, changePassword)
 };
 
 async function auth({ db, token }: State): Promise<"expired" | "nope" | "ok"> {
