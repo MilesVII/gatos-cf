@@ -1,7 +1,7 @@
 
 :root {
-	--font-main: normal 400 17px/22px "Roboto";
-	--font-butt: normal 500 17px/22px "Roboto";
+	--font-main: normal 400 14px/16px "Roboto";
+	--font-butt: normal 500 14px/16px "Roboto";
 
 	--color-back: #021526;
 	--color-fore: #03346E;
@@ -12,7 +12,11 @@
 	--radius-block: 16px;
 	--radius-small: 8px;
 
-	--padding-input: 8px;
+	--padding-big: 8px;
+	--padding: 4px;
+	--gap: 4px;
+	--radius: 2px;
+	--line: 2px;
 
 	background-color: var(--color-back);
 	color-scheme: dark;
@@ -31,19 +35,70 @@
 	padding: 0;
 }
 
-.strip-defaults {
+.strip-defaults, button, textarea, input {
 	appearance: none;
-	color: inherit;
 	background: none;
+	border: none;
+	color: inherit;
 	font: inherit;
 	outline: inherit;
-	border: none;
 }
 
-body {
+/* desktop */
+@media screen and (min-aspect-ratio: 1/1.42) {
+	body {
+		width: 100%;
+		display: grid;
+		grid-template-columns: min(300px, 20vw) auto;
+		gap: var(--padding-big);
+		padding: var(--padding-big);
+	}
+}
+/* mobile */
+@media screen and (max-aspect-ratio: 1/1.42) {
+	body {
+		width: 100%;
+		display: flex;
+		flex-flow: column nowrap;
+		align-items: stretch;
+		gap: var(--padding-big);
+		padding: var(--padding-big);
+	}
+}
+
+button {
+	background: var(--color-fore);
+	padding: var(--padding);
+	border-radius: var(--radius);
+	border: var(--line) solid transparent;
+	cursor: pointer;
+}
+button:hover {
+	background: var(--color-main);
+}
+button:focus {
+	border-color: var(--color-acnt);
+}
+textarea, input[type="text"] {
+	background-color: var(--color-fore);
+	border-radius: var(--radius);
+	padding: var(--padding);
+	border: var(--line) solid transparent;
+}
+textarea:focus, input[type="text"]:focus {
+	border-color: var(--color-acnt);
+}
+
+.tab-buttons {
 	display: flex;
-	flex-flow: column nowrap;
-	align-items: center;
+	flex-flow: row wrap;
+	align-items: baseline;
 	justify-content: center;
-	min-height: 100vh;
+	gap: var(--gap);
+}
+
+.post {
+	background-color: var(--color-fore);
+	border-radius: var(--radius);
+	padding: var(--padding);
 }

@@ -1,4 +1,4 @@
-import { type Kysely } from "kysely";
+import { sql, type Kysely } from "kysely";
 import { type Database } from "./db";
 import { password, Result } from "./utils";
 
@@ -28,9 +28,10 @@ function guarded<T extends any[], R>(
 
 export const routes = {
 	"/api/user/register": guarded( true, register),
-	"/api/user/signin":   guarded(false, signin),
-	"/api/user/signoff":  guarded( true, signoff),
-	"/api/user/change":   guarded( true, changePassword)
+	"/api/user/signin"  : guarded(false, signin),
+	"/api/user/signoff" : guarded( true, signoff),
+	"/api/user/change"  : guarded( true, changePassword),
+	"/api/tags"         : guarded(false, listTags),
 };
 
 async function auth({ db, token }: State): Promise<"expired" | "nope" | "ok"> {
@@ -88,4 +89,18 @@ async function changePassword({ db, token }: State, newPassword: string): Promis
 		.set("password", await password(newPassword))
 		.execute();
 	return true;
+}
+
+async function listTags({ db }: State) {
+	return await db
+		.selectFrom("tags")
+		.leftJoin("pairs", "pairs.tag", "tags.id")
+		.select([
+			"tags.id as id",
+			'tags.name as name',
+			sql<number>`COUNT(pairs.tag)`.as("count")
+		])
+		.groupBy(["tags.id", "tags.name"])
+		.orderBy("count", "desc")
+		.execute();
 }

@@ -9,8 +9,36 @@
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 		<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap" rel="stylesheet">
 		<link rel="stylesheet" href="styles.css"/>
+		<script type="module" src="index.js"></script>
 	</head>
 	<body>
-		<script type="module" src="index.js"></script>
+		<template id="post">
+			<div class="post">
+				<div class="post-images"></div>
+				<div class="post-caption"></div>
+				<textarea class="post-tags">
+
+				</textarea>
+			</div>
+		</template>
+
+
+		<div>
+			<input type="text" placeholder="поиск"></input>
+		</div>
+		<main>
+			<div class="tab-buttons">
+				<button data-tab="posts">Посты</button>
+				<button data-tab="tags">Теги</button>
+			</div>
+			<rampike-tabs tab="posts">
+				<rampike-tab key="posts">
+					<div>posts</div>
+				</rampike-tab>
+				<rampike-tab key="tags">
+					<div>tags</div>
+				</rampike-tab>
+			</rampike-tabs>
+		</main>
 	</body>
 </html>

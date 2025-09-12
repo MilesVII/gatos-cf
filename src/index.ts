@@ -65,6 +65,10 @@ export default {
 				if (result.clearance === "ok") return respond(200);
 				else return respond(401, result.clearance);
 			}
+			case("/api/tags"): {
+				const result = await routes[route](state);
+				return respond(200, JSON.stringify(result));
+			}
 		}
 	}
 } satisfies ExportedHandler<Env>;
