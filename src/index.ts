@@ -36,6 +36,10 @@ export default {
 		const params = paramsResult.success ? paramsResult.value : null; 
 
 		switch (route) {
+			case("/api/user/vibecheck"): {
+				const result = await routes[route](state);
+				return respond(200, JSON.stringify(result));
+			}
 			case("/api/user/register"): {
 				if (typeof params?.login !== "string")    return respond(400);
 				if (typeof params?.password !== "string") return respond(400);
@@ -68,6 +72,16 @@ export default {
 			case("/api/tags"): {
 				const result = await routes[route](state);
 				return respond(200, JSON.stringify(result));
+			}
+			case("/api/posts"): {
+				const result = await routes[route](state, 0);
+				return respond(200, JSON.stringify(result));
+			}
+			case("/proxy"): {
+				if (typeof params?.url !== "string") return respond(400);
+
+				const result = await routes[route](state, params.url);
+				return respond(200, result.result);
 			}
 		}
 	}

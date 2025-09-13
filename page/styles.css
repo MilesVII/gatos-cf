@@ -53,6 +53,17 @@
 		gap: var(--padding-big);
 		padding: var(--padding-big);
 	}
+
+	.post-list {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: var(--gap);
+		align-items: start;
+	}
+
+	.mobile-only {
+		display: hidden;
+	}
 }
 /* mobile */
 @media screen and (max-aspect-ratio: 1/1.42) {
@@ -64,8 +75,28 @@
 		gap: var(--padding-big);
 		padding: var(--padding-big);
 	}
+
+	.post-list {
+		display: flex;
+		flex-flow: column nowrap;
+		align-items: stretch;
+		gap: var(--gap);
+	}
+
+	.desktop-only {
+		display: hidden;
+	}
 }
 
+img {
+	display: block;
+	max-width: 100%;
+	max-height: 32vh;
+	border-radius: var(--radius);
+}
+hr {
+	width: 100%;
+}
 button {
 	background: var(--color-fore);
 	padding: var(--padding);
@@ -79,14 +110,31 @@ button:hover {
 button:focus {
 	border-color: var(--color-acnt);
 }
+button:disabled {
+	cursor: progress;
+}
 textarea, input[type="text"] {
 	background-color: var(--color-fore);
 	border-radius: var(--radius);
 	padding: var(--padding);
 	border: var(--line) solid transparent;
+	max-width: 100%;
+	width: 100%;
 }
 textarea:focus, input[type="text"]:focus {
 	border-color: var(--color-acnt);
+}
+
+.side {
+	display: flex;
+	flex-flow: column nowrap;
+	gap: var(--gap);
+}
+
+.main {
+	display: flex;
+	flex-flow: column nowrap;
+	gap: var(--padding-big);
 }
 
 .tab-buttons {
@@ -98,7 +146,37 @@ textarea:focus, input[type="text"]:focus {
 }
 
 .post {
+	width: 100%;
 	background-color: var(--color-fore);
 	border-radius: var(--radius);
 	padding: var(--padding);
+	gap: var(--gap);
+	background-color: var(--color-fore);
+	border-radius: var(--radius);
+	display: flex;
+	flex-flow: column nowrap;
+}
+.post-images {
+	width: 100%;
+	display: grid;
+	grid-template-columns: repeat(min(var(--media-count), 3), auto);
+	justify-items: center;
+}
+.post-tags {
+	width: 100%;
+	display: flex;
+	flex-flow: row wrap;
+	gap: var(--gap);
+}
+
+.tags-list {
+	display: flex;
+	flex-flow: row wrap;
+	align-items: baseline;
+	justify-content: center;
+	gap: var(--gap);
+}
+
+.wide {
+	width: 100%;
 }

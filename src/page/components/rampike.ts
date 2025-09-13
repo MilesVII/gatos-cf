@@ -1,25 +1,31 @@
 
-class RampikeUnit<Params> extends HTMLElement {
-	// readonly
-	params: Params;
-
-	render() {
-
+type Rampike<Root, Params> = Root & {
+	rampike: {
+		params: Params,
+		render: () => void
 	}
-	constructor() {
-		super();
-	}
-};
+}
 
-export function rampike<Params>(
+export function rampike<Root, Params>(
 	template: HTMLTemplateElement,
 	params: Params,
-	render: (params: Params, root: Element) => void
+	render: (params: Params, root: Root) => void
 ) {
-	const _params = { ...params };
 	const contents = template.content.cloneNode(true);
-	console.log(contents)
-	// render(_params, contents);
+	const roots: unknown[] = [];
+	contents.childNodes.forEach(node => {
+		if (node.nodeType === Node.ELEMENT_NODE)
+			roots.push(node as unknown);
+	});
+	if (roots.length < 1) throw new Error("provided template has no elements");
 
-	return { params: _params, contents }
+	const root = roots[0] as Rampike<Root, Params>;
+
+	root.rampike = {
+		params: { ...params },
+		render: () => render(root.rampike.params, root)
+	};
+	root.rampike.render();
+
+	return root;
 }

@@ -27,11 +27,14 @@ function guarded<T extends any[], R>(
 };
 
 export const routes = {
-	"/api/user/register": guarded( true, register),
-	"/api/user/signin"  : guarded(false, signin),
-	"/api/user/signoff" : guarded( true, signoff),
-	"/api/user/change"  : guarded( true, changePassword),
-	"/api/tags"         : guarded(false, listTags),
+	"/api/user/vibecheck": guarded(false, vibecheck),
+	"/api/user/register" : guarded( true, register),
+	"/api/user/signin"   : guarded(false, signin),
+	"/api/user/signoff"  : guarded( true, signoff),
+	"/api/user/change"   : guarded( true, changePassword),
+	"/api/tags"          : guarded(false, listTags),
+	"/api/posts"         : guarded(false, listPosts),
+	"/proxy"             : guarded(false, proxy),
 };
 
 async function auth({ db, token }: State): Promise<"expired" | "nope" | "ok"> {
@@ -41,8 +44,13 @@ async function auth({ db, token }: State): Promise<"expired" | "nope" | "ok"> {
 	return "ok";
 }
 
+async function vibecheck(state: State): Promise<boolean> {
+	const status = await auth(state);
+	return status === "ok";
+}
+
 async function register(state: State, login: string, pwd: string): Promise<boolean> {
-	const { db, token } = state;
+	const { db } = state;
 	await db
 		.insertInto("users")
 		.values({ login, password: await password(pwd) })
@@ -103,4 +111,31 @@ async function listTags({ db }: State) {
 		.groupBy(["tags.id", "tags.name"])
 		.orderBy("count", "desc")
 		.execute();
+}
+
+async function listPosts({ db }: State, offset: number, tagSearch?: string) {
+	return await db
+		.selectFrom("posts")
+		.leftJoin("pairs", "pairs.post", "posts.id")
+		.leftJoin("tags", "tags.id", "pairs.tag")
+		.select([
+			"posts.id",
+			"posts.caption",
+			"posts.media",
+			"posts.source",
+			sql<string>`
+				json_group_array(
+					json_object("tagId", tags.id, "tagName", tags.name)
+				)
+			`.as("tags")
+		])
+		.groupBy("posts.id")
+		.limit(20)
+		.offset(offset)
+		.execute();
+}
+
+async function proxy(_: State, url: string) {
+	const response = await fetch(url);
+	return response.ok ? await response.bytes() : null;
 }

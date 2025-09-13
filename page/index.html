@@ -12,31 +12,37 @@
 		<script type="module" src="index.js"></script>
 	</head>
 	<body>
-		<template id="post">
-			<div class="post">
+		<template id="t-post">
+			<article class="post">
 				<div class="post-images"></div>
 				<div class="post-caption"></div>
-				<textarea class="post-tags">
-
-				</textarea>
-			</div>
+				<hr/>
+				<div class="post-tags"></div>
+			</article>
 		</template>
 
 
-		<div>
-			<input type="text" placeholder="поиск"></input>
+		<div class="side">
+			<div class="dashboard">
+				<button id="dashboard-check">auth</button>
+			</div>
+			<input type="text" id="search" list="list-tags" placeholder="поиск"></input>
+			<button class="wide">искатб</button>
 		</div>
-		<main>
+		<main class="main">
 			<div class="tab-buttons">
 				<button data-tab="posts">Посты</button>
 				<button data-tab="tags">Теги</button>
 			</div>
 			<rampike-tabs tab="posts">
 				<rampike-tab key="posts">
-					<div>posts</div>
+					<div class="tab-buttons">
+						pagination
+					</div>
+					<div class="post-list"></div>
 				</rampike-tab>
 				<rampike-tab key="tags">
-					<div>tags</div>
+					<div class="tags-list"></div>
 				</rampike-tab>
 			</rampike-tabs>
 		</main>
