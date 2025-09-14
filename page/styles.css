@@ -58,7 +58,7 @@
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: var(--gap);
-		align-items: start;
+		align-items: stretch;
 	}
 
 	.mobile-only {
@@ -124,6 +124,9 @@ textarea, input[type="text"] {
 textarea:focus, input[type="text"]:focus {
 	border-color: var(--color-acnt);
 }
+a, a:visited {
+	color: var(--color-acnt);
+}
 
 .side {
 	display: flex;
@@ -167,6 +170,12 @@ textarea:focus, input[type="text"]:focus {
 	display: flex;
 	flex-flow: row wrap;
 	gap: var(--gap);
+}
+.post-tags > * {
+	background-color: var(--color-main);
+}
+.post hr {
+	margin-top: auto;
 }
 
 .tags-list {

@@ -1,4 +1,4 @@
-import { Post, posts, tags, vibecheck } from "./api";
+import { Post, posts, Tag, tags, vibecheck } from "./api";
 import { rampike } from "./components/rampike";
 import { define as defineTabs, RampikeTabs } from "./components/tabs";
 
@@ -13,32 +13,69 @@ function components() {
 	defineTabs();
 }
 
+type State = {
+	tags: Tag[],
+	page: {
+		posts: Post[],
+		page: number,
+		total: number
+	},
+	search: null | Tag["id"],
+	loading: boolean,
+	auth: boolean
+};
 async function main() {
-	attachListeners();
+	const state: State = {
+		tags: [],
+		page: {
+			posts: [],
+			page: 0,
+			total: -1
+		},
+		search: null,
+		loading: false,
+		auth: false
+	};
+	attachListeners(state);
 
-	updateTags();
+	updateTags(state);
+	loadPage(state);
 	vibecheck();
-	const p = await posts();
-	p.forEach(makePost);
 }
 
-function attachListeners() {
-	const tabs = document.querySelector<RampikeTabs>("rampike-tabs");
+function attachListeners(state: State) {
+	const tabsMain = document.querySelector<RampikeTabs>("rampike-tabs#rp-tabs-main");
+	const tabsSide = document.querySelector<RampikeTabs>("rampike-tabs#rp-tabs-side");
 	document.querySelectorAll<HTMLElement>("[data-tab]").forEach(e => {
-		e.addEventListener("click", () => tabs.tab = e.dataset.tab)
+		const target = e.dataset.for === "rp-tabs-main" ? tabsMain : tabsSide;
+		e.addEventListener("click", () => target.tab = e.dataset.tab);
 	});
 
 	const dashboardEntry = document.querySelector<HTMLButtonElement>("#dashboard-check");
-	dashboardEntry?.addEventListener("click", () => {
+	dashboardEntry?.addEventListener("click", async () => {
 		dashboardEntry.disabled = true;
+		if (await vibecheck()) {
+			console.log("+vibe");
+			// passed
+		} else {
+			console.log("-vibe");
+			// show signin
+		}
+	});
 
-
+	const searchBar = document.querySelector<HTMLInputElement>("input#search-bar");
+	const searchButton = document.querySelector<HTMLElement>("#search-button");
+	searchButton.addEventListener("click", () => {
+		const term = searchBar.value.trim().toLowerCase();
+		pickTag(state, term);
 	})
 }
 
-async function updateTags() {
+async function updateTags(state: State) {
 	const t = await tags();
 	if (!t) return;
+
+	state.tags = t;
 
 	let list = document.querySelector("datalist#list-tags");
 	if (list) list.innerHTML = "";
@@ -57,22 +94,36 @@ async function updateTags() {
 	}));
 
 	const buttonList = document.querySelector(".tags-list");
-	const searchBar = document.querySelector<HTMLInputElement>("#search");
+	const searchBar = document.querySelector<HTMLInputElement>("#search-bar");
 	if (!buttonList || !searchBar) return;
 	buttonList.innerHTML = "";
 	buttonList.append(...t.map(tag => {
 		const item = document.createElement("button");
 		item.textContent = `${tag.name} (${tag.count})`;
-		item.addEventListener("click", () => searchBar.value = tag.name);
+		item.addEventListener("click", () => {
+			searchBar.value = tag.name;
+			pickTag(state, tag.name);
+		});
 		return item;
 	}));
 }
 
-function makePost(post: Post) {
+async function loadPage(state: State) {
+	state.loading = true;
+	const result = await posts(state.page.page, state.search ?? undefined);
+	state.page.total = Math.ceil(result.count / result.perPage);
+	const container = document.querySelector<HTMLElement>(".post-list")!;
+	container.innerHTML = "";
+	container.append(...Array.from(result.posts).map(p => makePost(state, p)));
+	state.loading = false;
+	console.log(state)
+}
+
+function makePost(state: State, post: Post) {
 	const postTemplate = document.querySelector<HTMLTemplateElement>("template#t-post")!;
 
-	const postElement = rampike<HTMLDivElement, Post>(postTemplate, post, (params, root) => {
-		const [image, caption, _hr, tags] = Array.from(root.children) as HTMLElement[];
+	return rampike<HTMLDivElement, Post>(postTemplate, post, (params, root) => {
+		const [image, caption, _hr, tags, source] = Array.from(root.children) as HTMLElement[];
 
 		image.hidden = params.media.length === 0;
 		image.style.setProperty("--media-count", `${params.media.length}`);
@@ -82,15 +133,30 @@ function makePost(post: Post) {
 			return e;
 		}));
 
+		caption.hidden = !!params.caption;
 		caption.textContent = params.caption;
 
 		tags.innerHTML = "";
+		tags.hidden = params.tags.length === 0;
 		tags.append(...params.tags.map(({ name }) => {
 			const e = document.createElement("button");
 			e.textContent = name;
+			e.addEventListener("click", () => pickTag(state, name));
 			return e;
 		}));
-	});
 
-	document.querySelector(".post-list").append(postElement);
+		(source as HTMLAnchorElement).href = post.source;
+		(source as HTMLAnchorElement).textContent = post.source;
+	});
+}
+
+function pickTag(state: State, tagName: string) {
+	const tag = state.tags.find(({ name }) => tagName === name);
+	if (!tag) alert("постов с таким тегом не найдено");
+
+	state.search = tag.id;
+	state.page.page = 0;
+	document.body.scrollIntoView({behavior: "smooth"});
+	document.querySelector<HTMLButtonElement>(`[data-for="rp-tabs-main"][data-tab="posts"]`)?.click();
+	loadPage(state);
 }

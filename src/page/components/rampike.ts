@@ -6,6 +6,7 @@ type Rampike<Root, Params> = Root & {
 	}
 }
 
+// TODO: generalize source
 export function rampike<Root, Params>(
 	template: HTMLTemplateElement,
 	params: Params,
@@ -22,7 +23,7 @@ export function rampike<Root, Params>(
 	const root = roots[0] as Rampike<Root, Params>;
 
 	root.rampike = {
-		params: { ...params },
+		params,
 		render: () => render(root.rampike.params, root)
 	};
 	root.rampike.render();

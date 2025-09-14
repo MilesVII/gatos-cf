@@ -2,6 +2,8 @@ import { sql, type Kysely } from "kysely";
 import { type Database } from "./db";
 import { password, Result } from "./utils";
 
+const POSTS_PER_PAGE = 20;
+
 type State = {
 	db: Kysely<Database>,
 	token?: string
@@ -113,8 +115,20 @@ async function listTags({ db }: State) {
 		.execute();
 }
 
-async function listPosts({ db }: State, offset: number, tagSearch?: string) {
-	return await db
+async function listPosts({ db }: State, page: number, tagSearch?: number) {
+	const searching = typeof tagSearch === "number";
+	let countQuery = db
+		.selectFrom("posts");
+	if (searching)
+		countQuery = countQuery
+			.leftJoin("pairs", "pairs.post", "posts.id")
+			.where("pairs.tag", "=", tagSearch);
+	const countRow = await countQuery
+		.select(sql<number>`COUNT(*)`.as("total"))
+		.executeTakeFirst();
+	const count = countRow?.total ?? 0
+
+	let selectQuery = db
 		.selectFrom("posts")
 		.leftJoin("pairs", "pairs.post", "posts.id")
 		.leftJoin("tags", "tags.id", "pairs.tag")
@@ -128,11 +142,17 @@ async function listPosts({ db }: State, offset: number, tagSearch?: string) {
 					json_object("tagId", tags.id, "tagName", tags.name)
 				)
 			`.as("tags")
-		])
+		]);
+	if (searching)
+		selectQuery = selectQuery
+			.where("pairs.tag", "=", tagSearch);
+	const result = await selectQuery
 		.groupBy("posts.id")
-		.limit(20)
-		.offset(offset)
+		.limit(POSTS_PER_PAGE)
+		.offset(page * POSTS_PER_PAGE)
 		.execute();
+
+	return { count, posts: result, perPage: POSTS_PER_PAGE };
 }
 
 async function proxy(_: State, url: string) {

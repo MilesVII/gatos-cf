@@ -18,23 +18,37 @@
 				<div class="post-caption"></div>
 				<hr/>
 				<div class="post-tags"></div>
+				<a class="post-source"></a>
 			</article>
 		</template>
 
 
 		<div class="side">
-			<div class="dashboard">
-				<button id="dashboard-check">auth</button>
+			<div class="tab-buttons">
+				<button data-for="rp-tabs-side" data-tab="dash">Редактирование</button>
+				<button data-for="rp-tabs-side" data-tab="search">Поиск</button>
+				<button data-for="rp-tabs-side" data-tab="settings">Настройки</button>
 			</div>
-			<input type="text" id="search" list="list-tags" placeholder="поиск"></input>
-			<button class="wide">искатб</button>
+			<rampike-tabs id="rp-tabs-side" tab="search">
+				<rampike-tab key="dash">
+					<div class="dashboard">
+						<button id="dashboard-check">Вайбчек</button>
+					</div>
+				</rampike-tab>
+				<rampike-tab key="search">
+					<input type="text" id="search-bar" list="list-tags" placeholder="поиск"></input>
+					<button id="search-button" class="wide">искатб</button>
+				</rampike-tab>
+				<rampike-tab key="settings">
+				</rampike-tab>
+			</rampike-tabs>
 		</div>
 		<main class="main">
 			<div class="tab-buttons">
-				<button data-tab="posts">Посты</button>
-				<button data-tab="tags">Теги</button>
+				<button data-for="rp-tabs-main" data-tab="posts">Посты</button>
+				<button data-for="rp-tabs-main" data-tab="tags">Теги</button>
 			</div>
-			<rampike-tabs tab="posts">
+			<rampike-tabs id="rp-tabs-main" tab="posts">
 				<rampike-tab key="posts">
 					<div class="tab-buttons">
 						pagination

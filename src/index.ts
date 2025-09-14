@@ -6,8 +6,8 @@ import { nothrow } from "./utils";
 
 const MIGRATIONS_EXPOSED = false;
 
-const respond = (status: number, body: BodyInit | null = null) => {
-	return new Response(body, { status })
+const respond = (status: number, body: BodyInit | null = null, headers: HeadersInit = {}) => {
+	return new Response(body, { status, headers })
 }
 
 export default {
@@ -54,8 +54,16 @@ export default {
 
 				const result = await routes[route](state, params.login, params.password, params.info);
 				if (result.clearance !== "ok") return respond(401, result.clearance);
-				if (result.result?.success) return respond(200, result.result.value);
-				else return respond(401, result.result?.error)
+				if (result.result?.success) {
+					return respond(
+						200,
+						null,
+						{
+							"set-cookie": `auth_token=${result.result.value}; HttpOnly; Secure; SameSite=Strict; Path=/api/`
+						}
+					);
+				} else
+					return respond(401, result.result?.error)
 			}
 			case("/api/user/signoff"): {
 				const result = await routes[route](state);
@@ -74,7 +82,10 @@ export default {
 				return respond(200, JSON.stringify(result));
 			}
 			case("/api/posts"): {
-				const result = await routes[route](state, 0);
+				if (typeof params?.page !== "number") return respond(400);
+				// if (typeof params?.search !== "number") return respond(400);
+
+				const result = await routes[route](state, params.page, params.search);
 				return respond(200, JSON.stringify(result));
 			}
 			case("/proxy"): {
