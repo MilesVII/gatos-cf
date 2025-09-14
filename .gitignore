@@ -169,3 +169,4 @@ dist
 src/dump*.json
 page/*.js
 page/*.js.map
+*.sql

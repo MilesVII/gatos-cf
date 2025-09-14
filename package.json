@@ -8,7 +8,10 @@
 		"watch": "esbuild src/page/index.ts --bundle --sourcemap --watch --outfile=page/index.js",
 		"dev": "concurrently \"npm run watch\" \"wrangler dev\"",
 		"dev-back": "wrangler dev",
-		"cf-typegen": "wrangler types"
+		"cf-typegen": "wrangler types",
+		"export-remote": "wrangler d1 export gatos --remote --output=./database.sql",
+		"export-local": "wrangler d1 export gatos --output=./database.sql",
+		"import-remote": "wrangler d1 execute gatos --remote --file=./database.sql"
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.8.19",

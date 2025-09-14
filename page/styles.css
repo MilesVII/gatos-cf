@@ -165,6 +165,9 @@ a, a:visited {
 	grid-template-columns: repeat(min(var(--media-count), 3), auto);
 	justify-items: center;
 }
+.post-caption {
+	white-space: break-spaces;
+}
 .post-tags {
 	width: 100%;
 	display: flex;

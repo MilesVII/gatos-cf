@@ -69,6 +69,12 @@ function attachListeners(state: State) {
 		const term = searchBar.value.trim().toLowerCase();
 		pickTag(state, term);
 	})
+	document.querySelector<HTMLElement>("#search-reset")?.addEventListener("click", () => {
+		searchBar.value = "";
+		state.page.page = 0;
+		state.search = null;
+		loadPage(state);
+	})
 }
 
 async function updateTags(state: State) {
@@ -110,6 +116,7 @@ async function updateTags(state: State) {
 
 async function loadPage(state: State) {
 	state.loading = true;
+	document.querySelector<HTMLElement>("#search-reset").hidden = state.search === null;
 	const result = await posts(state.page.page, state.search ?? undefined);
 	state.page.total = Math.ceil(result.count / result.perPage);
 	state.page.posts = result.posts;
@@ -134,7 +141,7 @@ function makePost(state: State, post: Post) {
 			return e;
 		}));
 
-		caption.hidden = !!params.caption;
+		caption.hidden = !params.caption;
 		caption.textContent = params.caption;
 
 		tags.innerHTML = "";
