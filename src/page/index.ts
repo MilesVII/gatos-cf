@@ -112,6 +112,7 @@ async function loadPage(state: State) {
 	state.loading = true;
 	const result = await posts(state.page.page, state.search ?? undefined);
 	state.page.total = Math.ceil(result.count / result.perPage);
+	state.page.posts = result.posts;
 	const container = document.querySelector<HTMLElement>(".post-list")!;
 	container.innerHTML = "";
 	container.append(...Array.from(result.posts).map(p => makePost(state, p)));
@@ -138,6 +139,7 @@ function makePost(state: State, post: Post) {
 
 		tags.innerHTML = "";
 		tags.hidden = params.tags.length === 0;
+
 		tags.append(...params.tags.map(({ name }) => {
 			const e = document.createElement("button");
 			e.textContent = name;

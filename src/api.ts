@@ -131,7 +131,16 @@ async function listPosts({ db }: State, page: number, tagSearch?: number) {
 	let selectQuery = db
 		.selectFrom("posts")
 		.leftJoin("pairs", "pairs.post", "posts.id")
-		.leftJoin("tags", "tags.id", "pairs.tag")
+		.leftJoin("tags", "tags.id", "pairs.tag");
+	if (searching)
+		selectQuery = selectQuery.where(
+			"posts.id", "in",
+			db
+				.selectFrom("pairs as pt")
+				.where("pt.tag", '=', tagSearch)
+				.select("pt.post")
+		);
+	const result = await selectQuery
 		.select([
 			"posts.id",
 			"posts.caption",
@@ -142,11 +151,7 @@ async function listPosts({ db }: State, page: number, tagSearch?: number) {
 					json_object("tagId", tags.id, "tagName", tags.name)
 				)
 			`.as("tags")
-		]);
-	if (searching)
-		selectQuery = selectQuery
-			.where("pairs.tag", "=", tagSearch);
-	const result = await selectQuery
+		])
 		.groupBy("posts.id")
 		.limit(POSTS_PER_PAGE)
 		.offset(page * POSTS_PER_PAGE)
