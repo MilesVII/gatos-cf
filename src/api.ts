@@ -155,6 +155,7 @@ async function listPosts({ db }: State, page: number, tagSearch?: number) {
 		.groupBy("posts.id")
 		.limit(POSTS_PER_PAGE)
 		.offset(page * POSTS_PER_PAGE)
+		.orderBy("posts.time", "desc")
 		.execute();
 
 	return { count, posts: result, perPage: POSTS_PER_PAGE };

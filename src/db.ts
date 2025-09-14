@@ -3,6 +3,7 @@ import { chunk, password } from "./utils";
 import dump from "./dump_6.json"
 
 type Post = {
+	time: number,
 	id: string,
 	source: string,
 	caption: string,
@@ -38,15 +39,16 @@ export type Database = {
 
 export const migrations: Record<string, (db: Kysely<Database>) => Promise<void>> = {
 	create: async db => {
+		await db.schema.dropTable("pairs").ifExists().execute();
+		await db.schema.dropTable("tokens").ifExists().execute();
 		await db.schema.dropTable("posts").ifExists().execute();
 		await db.schema.dropTable("tags").ifExists().execute();
-		await db.schema.dropTable("pairs").ifExists().execute();
 		await db.schema.dropTable("users").ifExists().execute();
-		await db.schema.dropTable("tokens").ifExists().execute();
 
 		await db.schema
 			.createTable("posts")
 			.addColumn("id", "text", c => c.primaryKey())
+			.addColumn("time", "integer")
 			.addColumn("source", "text")
 			.addColumn("caption", "text")
 			.addColumn("media", "text")
@@ -100,6 +102,7 @@ export const migrations: Record<string, (db: Kysely<Database>) => Promise<void>>
 				pairs.push(...post.tags.map(t => ([id, t] as [string, string])));
 				return {
 					id,
+					time: post.postId,
 					caption: post.text,
 					media: post.photos.map(photo => photo.url).join("\n"),
 					source: `https://vk.com/memy_pro_kotow?w=wall-95648824_${post.postId}`
