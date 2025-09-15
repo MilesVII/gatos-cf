@@ -65,8 +65,10 @@ class RampikePages extends HTMLElement {
 			const events = (ellipsis || current) ? {} : {
 				"click": () => this.pick(page)
 			}
+			const attributes = current ? { "data-current": "" } : {};
 			return build({
 				elementName: ellipsis ? "span" : "button",
+				attributes,
 				events,
 				textContent
 			});

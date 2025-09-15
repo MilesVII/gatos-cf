@@ -196,3 +196,8 @@ a, a:visited {
 .dash-session-list {
 	display: contents;
 }
+
+.pagination > *[data-current] {
+	background: var(--color-acnt);
+	color: var(--color-back);
+}
