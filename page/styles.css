@@ -113,7 +113,7 @@ button:focus {
 button:disabled {
 	cursor: progress;
 }
-textarea, input[type="text"] {
+textarea, input[type="text"], input[type="password"] {
 	background-color: var(--color-fore);
 	border-radius: var(--radius);
 	padding: var(--padding);
@@ -121,7 +121,7 @@ textarea, input[type="text"] {
 	max-width: 100%;
 	width: 100%;
 }
-textarea:focus, input[type="text"]:focus {
+textarea:focus, input[type="text"]:focus, input[type="password"]:focus {
 	border-color: var(--color-acnt);
 }
 a, a:visited {
@@ -191,4 +191,8 @@ a, a:visited {
 
 .wide {
 	width: 100%;
+}
+
+.dash-session-list {
+	display: contents;
 }

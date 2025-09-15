@@ -19,7 +19,6 @@ export default {
 		if (migrationRequest) {
 			if (!MIGRATIONS_EXPOSED) return respond(403);
 			const migration = migrations[migrationRequest];
-			// console.log(migration, Object.keys(migrations), migrationRequest)
 			if (!migration) return respond(404);
 
 			await migration(db);
@@ -30,7 +29,7 @@ export default {
 		const route = pickRoute(url.pathname);
 		if (!route) return respond(501);
 
-		const token = request.headers.get("authorization") ?? undefined;
+		const token = pickCookie(request.headers.get("cookie") ?? "", "auth_token") ?? undefined;
 		const state = { db, token };
 		const paramsResult = await nothrow<any>(async () => await request.json());
 		const params = paramsResult.success ? paramsResult.value : null; 
@@ -55,20 +54,29 @@ export default {
 				const result = await routes[route](state, params.login, params.password, params.info);
 				if (result.clearance !== "ok") return respond(401, result.clearance);
 				if (result.result?.success) {
+					const token = result.result.value.token;
+					delete result.result.value.token;
 					return respond(
 						200,
-						null,
+						JSON.stringify(result),
 						{
-							"set-cookie": `auth_token=${result.result.value}; HttpOnly; Secure; SameSite=Strict; Path=/api/`
+							"set-cookie": `auth_token=${token}; HttpOnly; Secure; SameSite=Strict; Path=/api/`
 						}
 					);
 				} else
 					return respond(401, result.result?.error)
 			}
 			case("/api/user/signoff"): {
-				const result = await routes[route](state);
-				if (result.clearance === "ok") return respond(200);
-				else return respond(401, result.clearance);
+				if (typeof params?.session !== "number") return respond(400);
+
+				const result = await routes[route](state, params.session);
+				if (result.clearance === "ok")
+					return respond(
+						200,
+						null
+					);
+				else
+					return respond(401, result.clearance);
 			}
 			case("/api/user/change"): {
 				if (typeof params?.newPassword !== "string") return respond(400);
@@ -103,4 +111,14 @@ function pickRoute(pathname: string): (keyof typeof routes) | null {
 		return null;
 	}
 	return pathname as keyof typeof routes;
+}
+
+function pickCookie(raw: string, key: string): null | string {
+	const v = raw
+		.split("\n")
+		.map(entry =>
+			entry.trim().split("=")
+		)
+		.find(([k]) => k.trim() === key);
+	return v ? v[1] : null;
 }

@@ -8,7 +8,7 @@ async function api(
 > {
 	const response = await fetch(endpoint, { method: "POST", body: JSON.stringify(payload) });
 	if (response.ok) {
-		const result = await nothrow(() => response.json());
+		const result = await nothrow(async () => await response.json());
 		if (!result.success) return result;
 
 		if (result.value.clearance !== "ok")
@@ -49,7 +49,6 @@ export type Post = {
 export async function posts(page: number, search?: number) {
 	const result = await api("/api/posts", { page, search });
 	if (result.success) {
-		console.log(result.value)
 		const posts: Post[] = result.value.posts.map((raw: any) => ({
 			caption: raw.caption,
 			id: raw.id,
@@ -67,7 +66,20 @@ export async function posts(page: number, search?: number) {
 		return null;
 }
 
-export async function vibecheck(): Promise<boolean> {
+export type Sessions = {
+	id: number,
+	info: string
+}[];
+export async function vibecheck() {
 	const result = await api("/api/user/vibecheck");
-	return result.success && result.value;
+	return result.success ? result.value as Sessions : null;
+}
+
+export async function signin(login: string, password: string) {
+	const result = await api("/api/user/signin", { login, password, info: window.navigator.userAgent });
+	return result.success ? result.value.value.sessions : null; // TODO: wtf
+}
+
+export async function signout(id: number) {
+	return await api("/api/user/signoff", { session: id });
 }

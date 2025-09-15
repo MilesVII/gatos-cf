@@ -15,6 +15,7 @@ type User = {
 	password: string,
 }
 type Token = {
+	id: Generated<number>,
 	user: number,
 	value: string,
 	info: string,
@@ -78,6 +79,7 @@ export const migrations: Record<string, (db: Kysely<Database>) => Promise<void>>
 		
 		await db.schema
 			.createTable("tokens")
+			.addColumn("id", "integer", c => c.primaryKey().autoIncrement())
 			.addColumn("user", "integer")
 			.addForeignKeyConstraint(
 				"user-foreign",
@@ -85,6 +87,7 @@ export const migrations: Record<string, (db: Kysely<Database>) => Promise<void>>
 			)
 			.addColumn("value", "text")
 			.addColumn("info", "text")
+			.addColumn("expiry", "text")
 			.execute();
 
 		const p = await password("");

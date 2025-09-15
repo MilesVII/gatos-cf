@@ -37,6 +37,8 @@ class RampikeTabContainer extends HTMLElement {
 
 	set tab(value: string) {
 		this.querySelectorAll<RampikeTab>(TAG_NAME.tab).forEach(tab => {
+			if (findParentTabContainer(tab)?.id !== this.id) return;
+
 			const hidden = tab.key !== value;
 			tab.hidden = hidden;
 			tab.style.display = hidden ? "none" : "contents";
@@ -50,3 +52,11 @@ export function define() {
 	window.customElements.define(TAG_NAME.tabs, RampikeTabContainer);
 }
 export type RampikeTabs = RampikeTabContainer;
+
+function findParentTabContainer(origin: HTMLElement) {
+	let target = origin.parentElement;
+	while (target !== null && target.tagName !== TAG_NAME.tabs.toUpperCase()) {
+		target = target.parentElement;
+	}
+	return target;
+}

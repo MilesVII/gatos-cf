@@ -9,8 +9,9 @@ type State = {
 	token?: string
 };
 
+type Clearance = "expired" | "nope" | "ok";
 type ProtectedResult<T> = {
-	clearance: Awaited<ReturnType<typeof auth>>,
+	clearance: Clearance,
 	result: T | null
 };
 
@@ -21,7 +22,7 @@ function guarded<T extends any[], R>(
 ): (state: State, ...rest: T) => Promise<ProtectedResult<R>> {
 	return async (state: State, ...rest: T) => {
 		if (protectedRoute) {
-			const clearance = await auth(state);
+			const [clearance] = await auth(state);
 			if (clearance !== "ok") return { clearance, result: null }
 		}
 		return { clearance: "ok", result: await core(state, ...rest)}
@@ -39,16 +40,32 @@ export const routes = {
 	"/proxy"             : guarded(false, proxy),
 };
 
-async function auth({ db, token }: State): Promise<"expired" | "nope" | "ok"> {
-	const entry = await db.selectFrom("tokens").select(["value", "expiry"]).executeTakeFirst();
-	if (!entry) return "nope";
-	if (entry.expiry !== "none") return "expired";
-	return "ok";
+async function auth({ db, token }: State): Promise<[Clearance, number | null]> {
+	if (!token) return ["nope", null]
+	const entry = await db
+		.selectFrom("tokens")
+		.select(["user", "value", "expiry"])
+		.where("value", "=", token)
+		.executeTakeFirst();
+	if (!entry) return ["nope", null];
+	if (entry.expiry !== "none") return ["expired", null];
+	return ["ok", entry.user];
+}
+type Sessions = Awaited<ReturnType<typeof getSessions>>;
+async function getSessions({ db, token }: State, user: number) {
+	const tokens = await db
+		.selectFrom("tokens")
+		.select(["info", "id", "value"])
+		.where("user", "=", user)
+		.execute();
+	return tokens
+		.sort((_, t) => t.value === token ? 1 : -1)
+		.map(t => ({ id: t.id, info: t.info }));
 }
 
-async function vibecheck(state: State): Promise<boolean> {
-	const status = await auth(state);
-	return status === "ok";
+async function vibecheck(state: State): Promise<Sessions | null> {
+	const [status, user] = await auth(state);
+	return status === "ok" ? await getSessions(state, user!) : null;
 }
 
 async function register(state: State, login: string, pwd: string): Promise<boolean> {
@@ -60,7 +77,8 @@ async function register(state: State, login: string, pwd: string): Promise<boole
 	return true;
 }
 
-async function signin({ db }: State, login: string, pwd: string, info: string): Promise<Result<string, "nouser" | "password">> {
+async function signin(state: State, login: string, pwd: string, info: string): Promise<Result<{ token?: string, sessions: Sessions }, "nouser" | "password">> {
+	const { db } = state;
 	const user = await db
 		.selectFrom("users")
 		.selectAll()
@@ -74,13 +92,14 @@ async function signin({ db }: State, login: string, pwd: string, info: string): 
 		.insertInto("tokens")
 		.values({ user: user.id, value: token, info, expiry: "none" })
 		.execute();
+	const sessions = await getSessions(state, user.id);
 
-	return { success: true, value: token };
+	return { success: true, value: { token, sessions } };
 }
 
-async function signoff({ db, token }: State): Promise<boolean> {
+async function signoff({ db, token }: State, session: number): Promise<boolean> {
 	if (!token) return false;
-	await db.deleteFrom("tokens").where("value", "=", token).execute();
+	await db.deleteFrom("tokens").where("id", "=", session).execute();
 	return true;
 }
 

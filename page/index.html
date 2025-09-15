@@ -30,8 +30,21 @@
 			</div>
 			<rampike-tabs id="rp-tabs-side" tab="search">
 				<rampike-tab key="dash">
-					<div class="dashboard">
-						<button id="dashboard-check">Вайбчек</button>
+					<div class="dashboard side">
+						<rampike-tabs id="rp-tabs-dash" tab="vibe">
+							<rampike-tab key="vibe">
+								<button id="dash-check" class="wide">Вайбчек</button>
+							</rampike-tab>
+							<rampike-tab key="signin">
+								<input type="text" id="dash-login" placeholder="login"></input>
+								<input type="password" id="dash-pass" placeholder="password"></input>
+								<button id="dash-signin" class="wide">sign in</button>
+							</rampike-tab>
+							<rampike-tab key="admin">
+								<div>Session list</div>
+								<div class="dash-session-list"></div>
+							</rampike-tab>
+						</rampike-tabs>
 					</div>
 				</rampike-tab>
 				<rampike-tab key="search">
