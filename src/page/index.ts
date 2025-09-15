@@ -1,6 +1,7 @@
 import { Post, posts, Sessions, signin, signout, Tag, tags, vibecheck } from "./api";
-import { rampike } from "./components/rampike";
+import { rampike, fromTemplate } from "./components/rampike";
 import { define as defineTabs, RampikeTabs } from "./components/tabs";
+import { define as definePages, RampikePagination } from "./components/pagination";
 
 start();
 
@@ -11,14 +12,14 @@ async function start() {
 
 function components() {
 	defineTabs();
+	definePages();
 }
 
 type State = {
 	tags: Tag[],
 	page: {
 		posts: Post[],
-		page: number,
-		total: number
+		pager: RampikePagination
 	},
 	search: null | Tag["id"],
 	loading: boolean,
@@ -29,8 +30,7 @@ async function main() {
 		tags: [],
 		page: {
 			posts: [],
-			page: 0,
-			total: -1
+			pager: document.querySelector<RampikePagination>("#rp-pages")
 		},
 		search: null,
 		loading: false,
@@ -59,8 +59,13 @@ function attachListeners(state: State) {
 	})
 	document.querySelector<HTMLElement>("#search-reset")?.addEventListener("click", () => {
 		searchBar.value = "";
-		state.page.page = 0;
+		state.page.pager.page = 0;
 		state.search = null;
+		loadPage(state);
+	})
+
+	state.page.pager.addEventListener("pick", (e: CustomEvent) => {
+		state.page.pager.page = e.detail.page;
 		loadPage(state);
 	})
 }
@@ -105,8 +110,8 @@ async function updateTags(state: State) {
 async function loadPage(state: State) {
 	state.loading = true;
 	document.querySelector<HTMLElement>("#search-reset").hidden = state.search === null;
-	const result = await posts(state.page.page, state.search ?? undefined);
-	state.page.total = Math.ceil(result.count / result.perPage);
+	const result = await posts(state.page.pager.page, state.search ?? undefined);
+	state.page.pager.pageCount = Math.ceil(result.count / result.perPage);
 	state.page.posts = result.posts;
 	const container = document.querySelector<HTMLElement>(".post-list")!;
 	container.innerHTML = "";
@@ -117,7 +122,7 @@ async function loadPage(state: State) {
 function makePost(state: State, post: Post) {
 	const postTemplate = document.querySelector<HTMLTemplateElement>("template#t-post")!;
 
-	return rampike<HTMLDivElement, Post>(postTemplate, post, (params, root) => {
+	return rampike<HTMLDivElement, Post>(fromTemplate(postTemplate), post, (params, root) => {
 		const [image, caption, _hr, tags, source] = Array.from(root.children) as HTMLElement[];
 
 		image.hidden = params.media.length === 0;
@@ -151,7 +156,7 @@ function pickTag(state: State, tagName: string) {
 	if (!tag) alert("постов с таким тегом не найдено");
 
 	state.search = tag.id;
-	state.page.page = 0;
+	state.page.pager.page = 0;
 	document.body.scrollIntoView({behavior: "smooth"});
 	document.querySelector<HTMLButtonElement>(`[data-for="rp-tabs-main"][data-tab="posts"]`)?.click();
 	loadPage(state);

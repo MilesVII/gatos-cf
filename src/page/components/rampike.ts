@@ -6,12 +6,22 @@ type Rampike<Root, Params> = Root & {
 	}
 }
 
-// TODO: generalize source
 export function rampike<Root, Params>(
-	template: HTMLTemplateElement,
+	root: Root,
 	params: Params,
 	render: (params: Params, root: Root) => void
 ) {
+	const _root = root as Rampike<Root, Params>;
+	_root.rampike = {
+		params,
+		render: () => render(_root.rampike.params, _root)
+	};
+	_root.rampike.render();
+
+	return root;
+}
+
+export function fromTemplate<T extends Element>(template: HTMLTemplateElement) {
 	const contents = template.content.cloneNode(true);
 	const roots: unknown[] = [];
 	contents.childNodes.forEach(node => {
@@ -20,13 +30,5 @@ export function rampike<Root, Params>(
 	});
 	if (roots.length < 1) throw new Error("provided template has no elements");
 
-	const root = roots[0] as Rampike<Root, Params>;
-
-	root.rampike = {
-		params,
-		render: () => render(root.rampike.params, root)
-	};
-	root.rampike.render();
-
-	return root;
+	return roots[0] as T;
 }
