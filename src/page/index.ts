@@ -1,7 +1,10 @@
-import { changePassword, Post, posts, Sessions, signin, signout, Tag, tags, vibecheck } from "./api";
+import { Post, posts, tags } from "./api";
 import { rampike, fromTemplate } from "./components/rampike";
 import { define as defineTabs, RampikeTabs } from "./components/tabs";
 import { define as definePages, RampikePagination } from "./components/pagination";
+import { State } from "./types";
+import { attachDash } from "./dash";
+import { hashToState, updateURL } from "./url";
 
 start();
 
@@ -15,31 +18,29 @@ function components() {
 	definePages();
 }
 
-type State = {
-	tags: Tag[],
-	page: {
-		posts: Post[],
-		pager: RampikePagination
-	},
-	search: null | Tag["id"],
-	loading: boolean,
-	auth: boolean
-};
 async function main() {
+	const pager = document.querySelector<RampikePagination>("#rp-pages");
 	const state: State = {
 		tags: [],
 		page: {
 			posts: [],
-			pager: document.querySelector<RampikePagination>("#rp-pages")
+			pager
 		},
 		search: null,
 		loading: false,
 		auth: false
 	};
+
 	attachListeners(state);
 
 	updateTags(state);
-	loadPage(state);
+	hashToState(state);
+	loadPage(state, true);
+
+	window.addEventListener("hashchange", () => {
+		hashToState(state);
+		loadPage(state, true);
+	});
 }
 
 function attachListeners(state: State) {
@@ -49,7 +50,7 @@ function attachListeners(state: State) {
 		const target = e.dataset.for === "rp-tabs-main" ? tabsMain : tabsSide;
 		e.addEventListener("click", () => target.tab = e.dataset.tab);
 	});
-	attachAuth(state);
+	attachDash(state);
 
 	const searchBar = document.querySelector<HTMLInputElement>("input#search-bar");
 	const searchButton = document.querySelector<HTMLElement>("#search-button");
@@ -105,9 +106,13 @@ async function updateTags(state: State) {
 		});
 		return item;
 	}));
+
+	if (state.search !== null)
+		searchBar.value = t.find(({id}) => id === state.search)?.name ?? "";
 }
 
-async function loadPage(state: State) {
+async function loadPage(state: State, skipHashChange: boolean = false) {
+	console.log("laod call")
 	state.loading = true;
 	document.querySelector<HTMLElement>("#search-reset").hidden = state.search === null;
 	const result = await posts(state.page.pager.page, state.search ?? undefined);
@@ -117,6 +122,7 @@ async function loadPage(state: State) {
 	container.innerHTML = "";
 	container.append(...Array.from(result.posts).map(p => makePost(state, p)));
 	state.loading = false;
+	if (!skipHashChange) updateURL(state);
 }
 
 function makePost(state: State, post: Post) {
@@ -160,49 +166,4 @@ function pickTag(state: State, tagName: string) {
 	document.body.scrollIntoView({behavior: "smooth"});
 	document.querySelector<HTMLButtonElement>(`[data-for="rp-tabs-main"][data-tab="posts"]`)?.click();
 	loadPage(state);
-}
-
-function attachAuth(state: State) {
-	const dashTabs =        document.querySelector<RampikeTabs>("#rp-tabs-dash")
-	const vibecheckButton = document.querySelector<HTMLButtonElement>("#dash-check");
-	const loginField =      document.querySelector<HTMLInputElement>("#dash-login");
-	const passwordField =   document.querySelector<HTMLInputElement>("#dash-pass");
-	const signinButton =    document.querySelector<HTMLButtonElement>("#dash-signin");
-	const sessionList =     document.querySelector<HTMLDivElement>(".dash-session-list");
-	const changeField =     document.querySelector<HTMLInputElement>("#dash-change-field");
-	const changeButton =    document.querySelector<HTMLButtonElement>("#dash-change-button");
-
-	function fillSessionList(sessions: Sessions) {
-		sessionList.innerHTML = "";
-		sessionList.append(...sessions.map(({id, info}) => {
-			const button = document.createElement("button");
-			button.classList.add("wide");
-			button.addEventListener("click", () => {
-				signout(id);
-				button.remove();
-			});
-			button.textContent = info;
-			return button;
-		}));
-	}
-	vibecheckButton.addEventListener("click", async () => {
-		const vibe = await vibecheck();
-		if (vibe) {
-			fillSessionList(vibe);
-			dashTabs.tab = "admin";
-		} else {
-			dashTabs.tab = "signin";
-		}
-	});
-	signinButton.addEventListener("click", async () => {
-		const result = await signin(loginField.value, passwordField.value);
-		if (!result) return;
-		
-		fillSessionList(result);
-		dashTabs.tab = "admin";
-	});
-	
-	changeButton.addEventListener("click", () => {
-		changePassword(changeField.value).then(() => dashTabs.tab = "signin");
-	});
 }
