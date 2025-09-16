@@ -1,4 +1,4 @@
-import { Post, posts, Sessions, signin, signout, Tag, tags, vibecheck } from "./api";
+import { changePassword, Post, posts, Sessions, signin, signout, Tag, tags, vibecheck } from "./api";
 import { rampike, fromTemplate } from "./components/rampike";
 import { define as defineTabs, RampikeTabs } from "./components/tabs";
 import { define as definePages, RampikePagination } from "./components/pagination";
@@ -49,25 +49,25 @@ function attachListeners(state: State) {
 		const target = e.dataset.for === "rp-tabs-main" ? tabsMain : tabsSide;
 		e.addEventListener("click", () => target.tab = e.dataset.tab);
 	});
-	handleAuth(state);
+	attachAuth(state);
 
 	const searchBar = document.querySelector<HTMLInputElement>("input#search-bar");
 	const searchButton = document.querySelector<HTMLElement>("#search-button");
 	searchButton.addEventListener("click", () => {
 		const term = searchBar.value.trim().toLowerCase();
 		pickTag(state, term);
-	})
+	});
 	document.querySelector<HTMLElement>("#search-reset")?.addEventListener("click", () => {
 		searchBar.value = "";
 		state.page.pager.page = 0;
 		state.search = null;
 		loadPage(state);
-	})
+	});
 
 	state.page.pager.addEventListener("pick", (e: CustomEvent) => {
 		state.page.pager.page = e.detail.page;
 		loadPage(state);
-	})
+	});
 }
 
 async function updateTags(state: State) {
@@ -162,13 +162,15 @@ function pickTag(state: State, tagName: string) {
 	loadPage(state);
 }
 
-function handleAuth(state: State) {
-	const dashTabs        = document.querySelector<RampikeTabs>("#rp-tabs-dash")
+function attachAuth(state: State) {
+	const dashTabs =        document.querySelector<RampikeTabs>("#rp-tabs-dash")
 	const vibecheckButton = document.querySelector<HTMLButtonElement>("#dash-check");
 	const loginField =      document.querySelector<HTMLInputElement>("#dash-login");
 	const passwordField =   document.querySelector<HTMLInputElement>("#dash-pass");
 	const signinButton =    document.querySelector<HTMLButtonElement>("#dash-signin");
 	const sessionList =     document.querySelector<HTMLDivElement>(".dash-session-list");
+	const changeField =     document.querySelector<HTMLInputElement>("#dash-change-field");
+	const changeButton =    document.querySelector<HTMLButtonElement>("#dash-change-button");
 
 	function fillSessionList(sessions: Sessions) {
 		sessionList.innerHTML = "";
@@ -198,5 +200,9 @@ function handleAuth(state: State) {
 		
 		fillSessionList(result);
 		dashTabs.tab = "admin";
+	});
+	
+	changeButton.addEventListener("click", () => {
+		changePassword(changeField.value).then(() => dashTabs.tab = "signin");
 	});
 }

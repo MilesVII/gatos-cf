@@ -83,3 +83,7 @@ export async function signin(login: string, password: string) {
 export async function signout(id: number) {
 	return await api("/api/user/signoff", { session: id });
 }
+
+export async function changePassword(newPassword: string) {
+	return await api("/api/user/change", { newPassword });
+}

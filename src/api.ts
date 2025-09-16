@@ -117,6 +117,10 @@ async function changePassword({ db, token }: State, newPassword: string): Promis
 		.where("id", "=", user.user)
 		.set("password", await password(newPassword))
 		.execute();
+	await db
+		.deleteFrom("tokens")
+		.where("user", "=", user.user)
+		.execute();
 	return true;
 }
 
