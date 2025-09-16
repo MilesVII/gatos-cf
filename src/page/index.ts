@@ -106,13 +106,9 @@ async function updateTags(state: State) {
 		});
 		return item;
 	}));
-
-	if (state.search !== null)
-		searchBar.value = t.find(({id}) => id === state.search)?.name ?? "";
 }
 
 async function loadPage(state: State, skipHashChange: boolean = false) {
-	console.log("laod call")
 	state.loading = true;
 	document.querySelector<HTMLElement>("#search-reset").hidden = state.search === null;
 	const result = await posts(state.page.pager.page, state.search ?? undefined);
@@ -122,6 +118,11 @@ async function loadPage(state: State, skipHashChange: boolean = false) {
 	container.innerHTML = "";
 	container.append(...Array.from(result.posts).map(p => makePost(state, p)));
 	state.loading = false;
+	if (state.search !== null) {
+		const searchBar = document.querySelector<HTMLInputElement>("#search-bar");
+		const currentTag = state.tags.find(({id}) => id === state.search);
+		if (currentTag) searchBar.value = currentTag.name;
+	}
 	if (!skipHashChange) updateURL(state);
 }
 

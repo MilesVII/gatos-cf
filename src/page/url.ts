@@ -32,6 +32,6 @@ export function updateURL(state: State) {
 
 export function hashToState(state: State) {
 	const hashParams = parseUrl();
-	if (hashParams.page) state.page.pager.page = parseInt(hashParams.page);
-	if (hashParams.search) state.search = parseInt(hashParams.search);
+	state.page.pager.page = hashParams.page ? parseInt(hashParams.page) : 0;
+	state.search = hashParams.search ? parseInt(hashParams.search) : null;
 }
