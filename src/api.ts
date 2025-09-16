@@ -37,6 +37,7 @@ export const routes = {
 	"/api/user/change"   : guarded( true, changePassword),
 	"/api/tags"          : guarded(false, listTags),
 	"/api/posts"         : guarded(false, listPosts),
+	"/api/post/attach"   : guarded( true, attachTag),
 	"/proxy"             : guarded(false, proxy),
 };
 
@@ -182,6 +183,28 @@ async function listPosts({ db }: State, page: number, tagSearch?: number) {
 		.execute();
 
 	return { count, posts: result, perPage: POSTS_PER_PAGE };
+}
+
+async function attachTag({ db }: State, post: string, tag: string) {
+	const tagSanitized = tag.trim().toLowerCase();
+	let id = await db
+		.selectFrom("tags")
+		.select("id")
+		.where("name", "=", tagSanitized)
+		.executeTakeFirst();
+
+	if (!id) {
+		const newTag = await db
+			.insertInto("tags")
+			.values({ name: tagSanitized })
+			.executeTakeFirst();
+		if (typeof newTag.insertId !== "bigint") return;
+		id = { id: Number(newTag.insertId) };
+	}
+	await db
+		.insertInto("pairs")
+		.values({ post, tag: id.id })
+		.executeTakeFirst();
 }
 
 async function proxy(_: State, url: string) {

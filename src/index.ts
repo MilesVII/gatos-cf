@@ -96,6 +96,13 @@ export default {
 				const result = await routes[route](state, params.page, params.search);
 				return respond(200, JSON.stringify(result));
 			}
+			case("/api/post/attach"): {
+				if (typeof params?.post !== "string") return respond(400);
+				if (typeof params?.tag !== "string") return respond(400);
+
+				const result = await routes[route](state, params.post, params.tag);
+				return respond(200, JSON.stringify(result));
+			}
 			case("/proxy"): {
 				if (typeof params?.url !== "string") return respond(400);
 

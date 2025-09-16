@@ -1,4 +1,4 @@
-import { Post, posts, tags } from "./api";
+import { attachTag, Post, posts, tags } from "./api";
 import { rampike, fromTemplate } from "./components/rampike";
 import { define as defineTabs, RampikeTabs } from "./components/tabs";
 import { define as definePages, RampikePagination } from "./components/pagination";
@@ -50,7 +50,7 @@ function attachListeners(state: State) {
 		const target = e.dataset.for === "rp-tabs-main" ? tabsMain : tabsSide;
 		e.addEventListener("click", () => target.tab = e.dataset.tab);
 	});
-	attachDash(state);
+	attachDash(state, () => loadPage(state, true));
 
 	const searchBar = document.querySelector<HTMLInputElement>("input#search-bar");
 	const searchButton = document.querySelector<HTMLElement>("#search-button");
@@ -130,7 +130,7 @@ function makePost(state: State, post: Post) {
 	const postTemplate = document.querySelector<HTMLTemplateElement>("template#t-post")!;
 
 	return rampike<HTMLDivElement, Post>(fromTemplate(postTemplate), post, (params, root) => {
-		const [image, caption, _hr, tags, source] = Array.from(root.children) as HTMLElement[];
+		const [image, caption, _hr, tags, adder, source] = Array.from(root.children) as HTMLElement[];
 
 		image.hidden = params.media.length === 0;
 		image.style.setProperty("--media-count", `${params.media.length}`);
@@ -152,6 +152,14 @@ function makePost(state: State, post: Post) {
 			e.addEventListener("click", () => pickTag(state, name));
 			return e;
 		}));
+
+		adder.hidden = !state.auth;
+		adder.addEventListener("keydown", async e => {
+			if (e.key !== "Enter") return;
+			await attachTag(post.id, (adder as HTMLInputElement).value.trim());
+			updateTags(state);
+			loadPage(state);
+		});
 
 		(source as HTMLAnchorElement).href = post.source;
 		(source as HTMLAnchorElement).textContent = post.source;

@@ -87,3 +87,7 @@ export async function signout(id: number) {
 export async function changePassword(newPassword: string) {
 	return await api("/api/user/change", { newPassword });
 }
+
+export async function attachTag(post: string, tag: string) {
+	return await api("/api/post/attach", { post, tag });
+}

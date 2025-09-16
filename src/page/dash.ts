@@ -2,7 +2,7 @@ import { changePassword, Sessions, signin, signout, vibecheck } from "./api";
 import { RampikeTabs } from "./components/tabs";
 import { State } from "./types";
 
-export function attachDash(state: State) {
+export function attachDash(state: State, onAuth: () => void) {
 	const dashTabs =        document.querySelector<RampikeTabs>("#rp-tabs-dash")
 	const vibecheckButton = document.querySelector<HTMLButtonElement>("#dash-check");
 	const loginField =      document.querySelector<HTMLInputElement>("#dash-login");
@@ -30,6 +30,8 @@ export function attachDash(state: State) {
 		if (vibe) {
 			fillSessionList(vibe);
 			dashTabs.tab = "admin";
+			state.auth = true;
+			onAuth();
 		} else {
 			dashTabs.tab = "signin";
 		}
@@ -40,9 +42,12 @@ export function attachDash(state: State) {
 		
 		fillSessionList(result);
 		dashTabs.tab = "admin";
+		state.auth = true;
+		onAuth();
 	});
 	
 	changeButton.addEventListener("click", () => {
 		changePassword(changeField.value).then(() => dashTabs.tab = "signin");
+		state.auth = false;
 	});
 }
