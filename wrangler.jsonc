@@ -17,9 +17,21 @@
 			"database_id": "fc0f425f-92b8-4ad4-95ba-af976d3192c6"
 		}
 	],
+	"r2_buckets": [
+		{
+			"binding": "gatoStore",
+			"bucket_name": "gatos"
+		}
+	],
 	"assets": {
 		"directory": "page"
-	}
+	},
+	"kv_namespaces": [
+		{
+			"binding": "gatosKV",
+			"id": "4b7ca985768b45d7a8aa00421596e6fb"
+		}
+	]
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement

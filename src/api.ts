@@ -1,5 +1,5 @@
 import { sql, type Kysely } from "kysely";
-import { type Database } from "./db";
+import { Post, type Database } from "./db";
 import { password, Result } from "./utils";
 
 const POSTS_PER_PAGE = 20;
@@ -38,7 +38,9 @@ export const routes = {
 	"/api/tags"          : guarded(false, listTags),
 	"/api/posts"         : guarded(false, listPosts),
 	"/api/post/attach"   : guarded( true, attachTag),
-	"/proxy"             : guarded(false, proxy),
+	"/api/post/untag"    : guarded( true, untag),
+	"/feed/post"         : guarded(false, feedPost), // protected by feed token
+	"/proxy"             : guarded(false, proxy)
 };
 
 async function auth({ db, token }: State): Promise<[Clearance, number | null]> {
@@ -205,6 +207,33 @@ async function attachTag({ db }: State, post: string, tag: string) {
 		.insertInto("pairs")
 		.values({ post, tag: id.id })
 		.executeTakeFirst();
+}
+
+async function untag({ db }: State, post: string, tag: number) {
+	await db
+		.deleteFrom("pairs")
+		.where("post", "=", post)
+		.where("tag", "=", tag)
+		.execute();
+}
+
+async function feedPost({ db }: State, caption: string, id: number, time: number, mediaCount: number) {
+	const existing = await db
+		.selectFrom("posts")
+		.selectAll()
+		.where("id", "=", `tg${id}`)
+		.executeTakeFirst();
+	if (existing) return;
+
+	const post: Post = {
+		caption,
+		id: `tg${id}`,
+		media: Array.from({length: mediaCount}).map(() => "-/-").join("\n"),
+		source: `https://t.me/memyprokotow/${id}`,
+		time: time
+	};
+
+	await db.insertInto("posts").values(post).execute();
 }
 
 async function proxy(_: State, url: string) {

@@ -1,8 +1,7 @@
 import { Generated, Kysely } from "kysely";
 import { chunk, password } from "./utils";
-import dump from "./dump_6.json"
 
-type Post = {
+export type Post = {
 	time: number,
 	id: string,
 	source: string,
@@ -95,46 +94,5 @@ export const migrations: Record<string, (db: Kysely<Database>) => Promise<void>>
 			.insertInto("users")
 			.values({ login: "admin", password: p })
 			.execute();
-	},
-	fill: async db => {
-		const pairs: [id: string, tag: string][] = [];
-		const posts = dump.posts
-			.sort((a, b) => a.postId - b.postId)
-			.map<Post>(post => {
-				const id = `vk${post.postId}`;
-				pairs.push(...post.tags.map(t => ([id, t] as [string, string])));
-				return {
-					id,
-					time: post.postId,
-					caption: post.text,
-					media: post.photos.map(photo => photo.url).join("\n"),
-					source: `https://vk.com/memy_pro_kotow?w=wall-95648824_${post.postId}`
-				}
-			});
-
-		for (const post of posts) {
-			await db
-				.insertInto("posts")
-				.values(post)
-				.execute();
-		}
-
-		const tags = new Set<string>(pairs.map(([, tag]) => tag));
-		for (const tag of tags) {
-			await db
-				.insertInto("tags")
-				.values({ name: tag })
-				.execute();
-		}
-
-		const indexedTags = await db.selectFrom("tags").selectAll().execute();
-		for (const [post, tag] of pairs) {
-			const tagId = indexedTags.find(({ name }) => name === tag)!.id;
-
-			await db
-				.insertInto("pairs")
-				.values({ post, tag: tagId })
-				.execute();
-		}
 	}
 }

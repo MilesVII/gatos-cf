@@ -130,13 +130,20 @@ function makePost(state: State, post: Post) {
 	const postTemplate = document.querySelector<HTMLTemplateElement>("template#t-post")!;
 
 	return rampike<HTMLDivElement, Post>(fromTemplate(postTemplate), post, (params, root) => {
-		const [image, caption, _hr, tags, adder, source] = Array.from(root.children) as HTMLElement[];
+		const [image, caption, _hr, tags, adder, source] = Array.from(root.children) as [
+			HTMLDivElement,
+			HTMLDivElement,
+			void,
+			HTMLDivElement,
+			HTMLInputElement,
+			HTMLAnchorElement
+		];
 
 		image.hidden = params.media.length === 0;
 		image.style.setProperty("--media-count", `${params.media.length}`);
-		image.append(...params.media.map(url => {
+		image.append(...params.media.map((_, i) => {
 			const e = document.createElement("img");
-			e.src = url;
+			e.src = `/r2/${post.id}-${i}`;
 			return e;
 		}));
 
@@ -156,13 +163,17 @@ function makePost(state: State, post: Post) {
 		adder.hidden = !state.auth;
 		adder.addEventListener("keydown", async e => {
 			if (e.key !== "Enter") return;
-			await attachTag(post.id, (adder as HTMLInputElement).value.trim());
+			const value = adder.value.trim();
+			if (value.length === 0) return;
+			adder.disabled = true;
+			await attachTag(post.id, value);
+			adder.disabled = false;
 			updateTags(state);
 			loadPage(state);
 		});
 
-		(source as HTMLAnchorElement).href = post.source;
-		(source as HTMLAnchorElement).textContent = post.source;
+		source.href = post.source;
+		source.textContent = post.source;
 	});
 }
 

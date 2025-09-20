@@ -1,31 +1,35 @@
 import { Kysely } from "kysely";
 import { D1Dialect } from "kysely-d1";
-import { Database, migrations } from "./db";
+import { Database } from "./db";
 import { routes } from "./api";
 import { nothrow } from "./utils";
-
-const MIGRATIONS_EXPOSED = false;
 
 const respond = (status: number, body: BodyInit | null = null, headers: HeadersInit = {}) => {
 	return new Response(body, { status, headers })
 }
 
 export default {
-	async fetch(request, env, ctx): Promise<Response> {
+	async fetch(request, env, _ctx): Promise<Response> {
+		const url = new URL(request.url);
+		if (url.pathname.startsWith("/r2/")) {
+			
+			const [, key] = url.pathname.split("/r2/");
+			return respond(200, await media(env.gatoStore, key));
+		}
+		if (url.pathname.startsWith("/feed/r2/")) {
+			const feedToken = await env.gatosKV.get("feed-token");
+			if (!feedToken) return respond(500, "feed token not defined");
+			if (request.headers.get("x-feed-token") !== feedToken) return respond(401);
+			const [, params] = url.pathname.split("/feed/r2/");
+			const file = await request.bytes();
+			await env.gatoStore.put(params, file);
+
+			return respond(200);
+		}
 		if (request.method !== "POST") return respond(405);
 
 		const db = new Kysely<Database>({ dialect: new D1Dialect({ database: env.gatos }) });
-		const migrationRequest = request.headers.get("x-admin-migrate");
-		if (migrationRequest) {
-			if (!MIGRATIONS_EXPOSED) return respond(403);
-			const migration = migrations[migrationRequest];
-			if (!migration) return respond(404);
 
-			await migration(db);
-			return respond(200);
-		}
-
-		const url = new URL(request.url);
 		const route = pickRoute(url.pathname);
 		if (!route) return respond(501);
 
@@ -103,6 +107,26 @@ export default {
 				const result = await routes[route](state, params.post, params.tag);
 				return respond(200, JSON.stringify(result));
 			}
+			case("/api/post/untag"): {
+				if (typeof params?.post !== "string") return respond(400);
+				if (typeof params?.tag !== "number") return respond(400);
+
+				const result = await routes[route](state, params.post, params.tag);
+				return respond(200, JSON.stringify(result));
+			}
+			case("/feed/post"): {
+				const feedToken = await env.gatosKV.get("feed-token");
+				if (!feedToken) return respond(500, "feed token not defined");
+
+				if (request.headers.get("x-feed-token") !== feedToken) return respond(401);
+				if (typeof params?.caption !== "string")    return respond(400);
+				if (typeof params?.id !== "number")         return respond(400);
+				if (typeof params?.time !== "number")       return respond(400);
+				if (typeof params?.mediaCount !== "number") return respond(400);
+
+				await routes[route](state, params.caption, params.id, params.time, params.mediaCount);
+				return respond(200);
+			}
 			case("/proxy"): {
 				if (typeof params?.url !== "string") return respond(400);
 
@@ -110,6 +134,7 @@ export default {
 				return respond(200, result.result);
 			}
 		}
+		// return respond(501);
 	}
 } satisfies ExportedHandler<Env>;
 
@@ -128,4 +153,12 @@ function pickCookie(raw: string, key: string): null | string {
 		)
 		.find(([k]) => k.trim() === key);
 	return v ? v[1] : null;
+}
+
+async function media(r2: R2Bucket, key: string) {
+	const item = await r2.get(key);
+	if (item)
+		return await item.bytes();
+	else
+		return null;
 }
