@@ -1,5 +1,5 @@
 
-type Rampike<Root, Params> = Root & {
+export type Rampike<Root, Params> = Root & {
 	rampike: {
 		params: Params,
 		render: () => void

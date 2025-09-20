@@ -91,3 +91,7 @@ export async function changePassword(newPassword: string) {
 export async function attachTag(post: string, tag: string) {
 	return await api("/api/post/attach", { post, tag });
 }
+
+export async function untag(post: string, tag: number) {
+	return await api("/api/post/untag", { post, tag });
+}

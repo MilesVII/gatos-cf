@@ -1,5 +1,5 @@
-import { attachTag, Post, posts, tags } from "./api";
-import { rampike, fromTemplate } from "./components/rampike";
+import { attachTag, Post, posts, tags, untag } from "./api";
+import { rampike, fromTemplate, Rampike } from "./components/rampike";
 import { define as defineTabs, RampikeTabs } from "./components/tabs";
 import { define as definePages, RampikePagination } from "./components/pagination";
 import { State } from "./types";
@@ -56,7 +56,9 @@ function attachListeners(state: State) {
 	const searchButton = document.querySelector<HTMLElement>("#search-button");
 	searchButton.addEventListener("click", () => {
 		const term = searchBar.value.trim().toLowerCase();
-		pickTag(state, term);
+		const tag = state.tags.find(t => t.name === term);
+		if (!tag) return;
+		pickTag(state, tag.id);
 	});
 	document.querySelector<HTMLElement>("#search-reset")?.addEventListener("click", () => {
 		searchBar.value = "";
@@ -102,7 +104,7 @@ async function updateTags(state: State) {
 		item.textContent = `${tag.name} (${tag.count})`;
 		item.addEventListener("click", () => {
 			searchBar.value = tag.name;
-			pickTag(state, tag.name);
+			pickTag(state, tag.id);
 		});
 		return item;
 	}));
@@ -125,9 +127,35 @@ async function loadPage(state: State, skipHashChange: boolean = false) {
 	}
 	if (!skipHashChange) updateURL(state);
 }
+async function updatePage(state: State) {
+	state.loading = true;
+	document.querySelector<HTMLElement>("#search-reset").hidden = state.search === null;
+	const result = await posts(state.page.pager.page, state.search ?? undefined);
+	state.page.pager.pageCount = Math.ceil(result.count / result.perPage);
+	state.page.posts = result.posts;
+	let reloadFlag = false;
+	result.posts.forEach(post => {
+		const target = document.querySelector<Rampike<HTMLElement, Post>>(`[data-post-id="${post.id}"]`);
+		if (!target) {
+			console.error("can't find post card for ", post.id);
+			reloadFlag = true;
+			return;
+		}
+		target.rampike.params = post;
+		target.rampike.render();
+	})
+	state.loading = false;
+	if (state.search !== null) {
+		const searchBar = document.querySelector<HTMLInputElement>("#search-bar");
+		const currentTag = state.tags.find(({id}) => id === state.search);
+		if (currentTag) searchBar.value = currentTag.name;
+	}
+	if (reloadFlag) window.location.reload();
+}
 
 function makePost(state: State, post: Post) {
 	const postTemplate = document.querySelector<HTMLTemplateElement>("template#t-post")!;
+	let adderListenerAttached = false;
 
 	return rampike<HTMLDivElement, Post>(fromTemplate(postTemplate), post, (params, root) => {
 		const [image, caption, _hr, tags, adder, source] = Array.from(root.children) as [
@@ -138,12 +166,15 @@ function makePost(state: State, post: Post) {
 			HTMLInputElement,
 			HTMLAnchorElement
 		];
+		root.dataset.postId = params.id;
+		root.title = params.id;
 
 		image.hidden = params.media.length === 0;
 		image.style.setProperty("--media-count", `${params.media.length}`);
+		image.innerHTML = "";
 		image.append(...params.media.map((_, i) => {
 			const e = document.createElement("img");
-			e.src = `/r2/${post.id}-${i}`;
+			e.src = `/r2/${params.id}-${i}`;
 			return e;
 		}));
 
@@ -152,36 +183,44 @@ function makePost(state: State, post: Post) {
 
 		tags.innerHTML = "";
 		tags.hidden = params.tags.length === 0;
-
-		tags.append(...params.tags.map(({ name }) => {
+		tags.append(...params.tags.map(({ name, id }) => {
 			const e = document.createElement("button");
 			e.textContent = name;
-			e.addEventListener("click", () => pickTag(state, name));
+			e.addEventListener("click", () => pickTag(state, id));
+			e.addEventListener("mousedown", e => {
+				e.preventDefault();
+				if (!state.auth) return true;
+				untag(params.id, id).then(() => {
+					updateTags(state);
+					updatePage(state);
+				});
+				return false;
+			})
 			return e;
 		}));
 
 		adder.hidden = !state.auth;
-		adder.addEventListener("keydown", async e => {
-			if (e.key !== "Enter") return;
-			const value = adder.value.trim();
-			if (value.length === 0) return;
-			adder.disabled = true;
-			await attachTag(post.id, value);
-			adder.disabled = false;
-			updateTags(state);
-			loadPage(state);
-		});
+		if (!adderListenerAttached) {
+			adder.addEventListener("keydown", async e => {
+				if (e.key !== "Enter") return;
+				const value = adder.value.trim();
+				if (value.length === 0) return;
+				adder.disabled = true;
+				await attachTag(params.id, value);
+				adder.disabled = false;
+				updateTags(state);
+				updatePage(state);
+			});
+			adderListenerAttached = true;
+		}
 
-		source.href = post.source;
-		source.textContent = post.source;
+		source.href = params.source;
+		source.textContent = params.source;
 	});
 }
 
-function pickTag(state: State, tagName: string) {
-	const tag = state.tags.find(({ name }) => tagName === name);
-	if (!tag) alert("постов с таким тегом не найдено");
-
-	state.search = tag.id;
+function pickTag(state: State, tag: number) {
+	state.search = tag;
 	state.page.pager.page = 0;
 	document.body.scrollIntoView({behavior: "smooth"});
 	document.querySelector<HTMLButtonElement>(`[data-for="rp-tabs-main"][data-tab="posts"]`)?.click();

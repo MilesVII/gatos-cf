@@ -215,6 +215,17 @@ async function untag({ db }: State, post: string, tag: number) {
 		.where("post", "=", post)
 		.where("tag", "=", tag)
 		.execute();
+	const exists = await db
+		.selectFrom("pairs")
+		.selectAll()
+		.where("tag", "=", tag)
+		.executeTakeFirst();
+	if (!exists) {
+		await db
+			.deleteFrom("tags")
+			.where("id", "=", tag)
+			.execute();
+	}
 }
 
 async function feedPost({ db }: State, caption: string, id: number, time: number, mediaCount: number) {
