@@ -1,9 +1,7 @@
-import { build } from "./mudcrack";
-
+import { mudcrack } from "../../../node_modules/rampike/dist/index";
 
 const TAG_NAME = "rampike-pages";
 const ATTRS = ["page", "distance", "pageCount"];
-
 
 class RampikePages extends HTMLElement {
 	static get observedAttributes() { return ATTRS; }
@@ -61,16 +59,16 @@ class RampikePages extends HTMLElement {
 			const current = page === this.page;
 			const ellipsis = page === -1;
 
-			const textContent = ellipsis ? "…" : `${page + 1}`;
+			const contents = ellipsis ? "…" : `${page + 1}`;
 			const events = (ellipsis || current) ? {} : {
 				"click": () => this.pick(page)
 			}
 			const attributes = current ? { "data-current": "" } : {};
-			return build({
-				elementName: ellipsis ? "span" : "button",
+			return mudcrack({
+				tagName: ellipsis ? "span" : "button",
 				attributes,
 				events,
-				textContent
+				contents
 			});
 		}));
 	}

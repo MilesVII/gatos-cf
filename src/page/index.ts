@@ -1,10 +1,10 @@
 import { attachTag, Post, posts, tags, untag } from "./api";
-import { rampike, fromTemplate, Rampike } from "./components/rampike";
 import { define as defineTabs, RampikeTabs } from "./components/tabs";
 import { define as definePages, RampikePagination } from "./components/pagination";
 import { State } from "./types";
 import { attachDash } from "./dash";
 import { hashToState, updateURL } from "./url";
+import { fromTemplateFirst, rampike, Rampike } from "rampike";
 
 start();
 
@@ -157,7 +157,7 @@ function makePost(state: State, post: Post) {
 	const postTemplate = document.querySelector<HTMLTemplateElement>("template#t-post")!;
 	let adderListenerAttached = false;
 
-	return rampike<HTMLDivElement, Post>(fromTemplate(postTemplate), post, (params, root) => {
+	return rampike<HTMLDivElement, Post>(fromTemplateFirst(postTemplate), post, (params, root) => {
 		const [image, caption, _hr, tags, adder, source] = Array.from(root.children) as [
 			HTMLDivElement,
 			HTMLDivElement,

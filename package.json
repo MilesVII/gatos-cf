@@ -22,6 +22,7 @@
 	},
 	"dependencies": {
 		"kysely": "^0.28.5",
-		"kysely-d1": "^0.4.0"
+		"kysely-d1": "^0.4.0",
+		"rampike": "^0.0.2"
 	}
 }
