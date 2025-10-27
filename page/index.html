@@ -7,7 +7,7 @@
 		<link rel="icon" href="/favicon.png" />
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-		<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400..500&display=swap" rel="stylesheet">
 		<link rel="stylesheet" href="styles.css"/>
 		<script type="module" src="index.js"></script>
 	</head>
@@ -25,48 +25,37 @@
 
 		<div class="side">
 			<div class="tab-buttons">
-				<button data-for="rp-tabs-side" data-tab="dash">Редактирование</button>
-				<button data-for="rp-tabs-side" data-tab="search">Поиск</button>
-				<button data-for="rp-tabs-side" data-tab="settings">Настройки</button>
+				<button class="butt" data-for="rp-tabs-main" data-tab="posts">посты</button>
+				<button class="butt" data-for="rp-tabs-main" data-tab="tags">теги</button>
 			</div>
-			<rampike-tabs id="rp-tabs-side" tab="search">
-				<rampike-tab key="dash">
-					<div class="dashboard side">
-						<rampike-tabs id="rp-tabs-dash" tab="vibe">
-							<rampike-tab key="vibe">
-								<button id="dash-check" class="wide">Вайбчек</button>
-							</rampike-tab>
-							<rampike-tab key="signin">
-								<input type="text" id="dash-login" placeholder="login"></input>
-								<input type="password" id="dash-pass" placeholder="password"></input>
-								<button id="dash-signin" class="wide">sign in</button>
-							</rampike-tab>
-							<rampike-tab key="admin">
-								<div>Change password</div>
-								<input type="password" id="dash-change-field" placeholder="new password"></input>
-								<button id="dash-change-button" class="wide">change password</button>
-								<div>Session list</div>
-								<div class="dash-session-list"></div>
-							</rampike-tab>
-						</rampike-tabs>
-					</div>
-				</rampike-tab>
-				<rampike-tab key="search">
-					<input type="text" id="search-bar" list="list-tags" placeholder="поиск"></input>
-					<button id="search-button" class="wide">искатб</button>
-					<button id="search-reset" class="wide">сброс</button>
-				</rampike-tab>
-				<rampike-tab key="settings">
-				</rampike-tab>
-			</rampike-tabs>
+			<div class="dashboard side">
+				<rampike-tabs id="rp-tabs-dash" tab="vibe">
+					<rampike-tab key="vibe">
+						<button id="dash-check" class="wide butt">редактировать</button>
+					</rampike-tab>
+					<rampike-tab key="signin">
+						<input type="text" id="dash-login" placeholder="login"></input>
+						<input type="password" id="dash-pass" placeholder="password"></input>
+						<button id="dash-signin" class="wide butt">sign in</button>
+					</rampike-tab>
+					<rampike-tab key="admin">
+						<div>Change password</div>
+						<input type="password" id="dash-change-field" placeholder="new password"></input>
+						<button id="dash-change-button" class="wide butt">change password</button>
+						<div>Session list</div>
+						<div class="dash-session-list"></div>
+					</rampike-tab>
+				</rampike-tabs>
+			</div>
 		</div>
 		<main class="main">
-			<div class="tab-buttons">
-				<button data-for="rp-tabs-main" data-tab="posts">Посты</button>
-				<button data-for="rp-tabs-main" data-tab="tags">Теги</button>
-			</div>
 			<rampike-tabs id="rp-tabs-main" tab="posts">
 				<rampike-tab key="posts">
+					<div class="search-row">
+						<input type="text" id="search-bar" list="list-tags" placeholder="поиск"></input>
+						<button class="butt" id="search-button" class="wide">искатб</button>
+						<button class="butt" id="search-reset" class="wide">сброс</button>
+					</div>
 					<rampike-pages id="rp-pages" class="tab-buttons pagination"></rampike-pages>
 					<div class="post-list"></div>
 				</rampike-tab>

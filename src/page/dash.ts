@@ -1,3 +1,4 @@
+import { mudcrack } from "rampike";
 import { changePassword, Sessions, signin, signout, vibecheck } from "./api";
 import { RampikeTabs } from "./components/tabs";
 import { State } from "./types";
@@ -14,16 +15,19 @@ export function attachDash(state: State, onAuth: () => void) {
 
 	function fillSessionList(sessions: Sessions) {
 		sessionList.innerHTML = "";
-		sessionList.append(...sessions.map(({id, info}) => {
-			const button = document.createElement("button");
-			button.classList.add("wide");
-			button.addEventListener("click", () => {
-				signout(id);
-				button.remove();
-			});
-			button.textContent = info;
-			return button;
-		}));
+		sessionList.append(...sessions.map(({id, info}) => 
+			mudcrack({
+				tagName: "button",
+				className: "wide tag",
+				contents: info,
+				events: {
+					"click": (_, el) => {
+						signout(id);
+						el.remove();
+					}
+				}
+			})
+		));
 	}
 	vibecheckButton.addEventListener("click", async () => {
 		const vibe = await vibecheck();

@@ -1,4 +1,4 @@
-import { mudcrack } from "../../../node_modules/rampike/dist/index";
+import { mudcrack } from "rampike";
 
 const TAG_NAME = "rampike-pages";
 const ATTRS = ["page", "distance", "pageCount"];

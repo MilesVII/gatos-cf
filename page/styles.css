@@ -1,21 +1,31 @@
 
 :root {
-	--font-main: normal 400 14px/16px "Roboto";
-	--font-butt: normal 500 14px/16px "Roboto";
+	--font-main: normal 400 16px/20px "Raleway";
+	--font-butt: normal 400 20px/24px "Raleway";
+	--font-fild: normal 400 24px/30px "Raleway";
 
-	--color-back: #021526;
-	--color-fore: #03346E;
-	--color-main: #6EACDA;
-	--color-acnt: #E2E2B6;
-	--color-text: #FCFDFD;
+	--color-back: #F5F5F5;
+	--color-fore: #FFFFFF;
+	--color-line: #EBEBEB;
+	--color-main: #2F7FFF;
+	--color-acnt: #2F7FFF;
+	--color-text: #232323;
+	--color-link: #4C7BBC;
 
-	--radius-block: 16px;
-	--radius-small: 8px;
+	--padding-tag: 4px 12px;
+	--padding-button: 12px 16px;
+	--padding-card: 16px;
+	--padding-input: 12px;
 
-	--padding-big: 8px;
-	--padding: 4px;
-	--gap: 4px;
-	--radius: 2px;
+	--gap-layout: 24px;
+	--gap-main: 20px;
+	--gap-list: 8px;
+	--gap: 12px;
+
+	--radius-tag: 8px;
+	--radius-button: 12px;
+	--radius-card: 12px;
+
 	--line: 2px;
 
 	background-color: var(--color-back);
@@ -50,8 +60,8 @@
 		width: 100%;
 		display: grid;
 		grid-template-columns: min(300px, 20vw) auto;
-		gap: var(--padding-big);
-		padding: var(--padding-big);
+		gap: var(--gap-layout);
+		padding: var(--gap-layout);
 	}
 
 	.post-list {
@@ -72,8 +82,8 @@
 		display: flex;
 		flex-flow: column nowrap;
 		align-items: stretch;
-		gap: var(--padding-big);
-		padding: var(--padding-big);
+		gap: var(--gap-layout);
+		padding: var(--gap-layout);
 	}
 
 	.post-list {
@@ -92,31 +102,15 @@ img {
 	display: block;
 	max-width: 100%;
 	max-height: 32vh;
-	border-radius: var(--radius);
 }
 hr {
 	width: 100%;
-}
-button {
-	background: var(--color-fore);
-	padding: var(--padding);
-	border-radius: var(--radius);
-	border: var(--line) solid transparent;
-	cursor: pointer;
-}
-button:hover {
-	background: var(--color-main);
-}
-button:focus {
-	border-color: var(--color-acnt);
-}
-button:disabled {
-	cursor: progress;
+	color: var(--color-line);
 }
 textarea, input[type="text"], input[type="password"] {
 	background-color: var(--color-fore);
-	border-radius: var(--radius);
-	padding: var(--padding);
+	border-radius: var(--radius-button);
+	padding: var(--padding-input);
 	border: var(--line) solid transparent;
 	max-width: 100%;
 	width: 100%;
@@ -125,7 +119,25 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus {
 	border-color: var(--color-acnt);
 }
 a, a:visited {
-	color: var(--color-acnt);
+	color: var(--color-link);
+}
+
+.butt {
+	background: var(--color-main);
+	color: white;
+	padding: var(--padding-button);
+	border-radius: var(--radius-button);
+	border: var(--line) solid transparent;
+	cursor: pointer;
+}
+/* .butt:hover {
+	background: var(--color-fore);
+} */
+.butt:focus {
+	border-color: var(--color-line);
+}
+.butt:disabled {
+	cursor: progress;
 }
 
 .side {
@@ -137,7 +149,7 @@ a, a:visited {
 .main {
 	display: flex;
 	flex-flow: column nowrap;
-	gap: var(--padding-big);
+	gap: var(--gap-main);
 }
 
 .tab-buttons {
@@ -145,19 +157,26 @@ a, a:visited {
 	flex-flow: row wrap;
 	align-items: baseline;
 	justify-content: center;
-	gap: var(--gap);
+	gap: var(--gap-list);
+}
+
+.search-row {
+	display: grid;
+	grid-template-columns: auto repeat(2, min-content);
+	gap: var(--gap-list);
 }
 
 .post {
 	width: 100%;
-	background-color: var(--color-fore);
-	border-radius: var(--radius);
-	padding: var(--padding);
+	padding: var(--padding-card);
 	gap: var(--gap);
 	background-color: var(--color-fore);
-	border-radius: var(--radius);
+	border-radius: var(--radius-card);
 	display: flex;
 	flex-flow: column nowrap;
+}
+.post img {
+	border-radius: var(--radius-card);
 }
 .post-images {
 	width: 100%;
@@ -166,6 +185,7 @@ a, a:visited {
 	justify-items: center;
 }
 .post-caption {
+	font: var(--font-butt);
 	white-space: break-spaces;
 }
 .post-tags {
@@ -186,7 +206,7 @@ a, a:visited {
 	flex-flow: row wrap;
 	align-items: baseline;
 	justify-content: center;
-	gap: var(--gap);
+	gap: var(--gap-list);
 }
 
 .wide {
@@ -199,5 +219,14 @@ a, a:visited {
 
 .pagination > *[data-current] {
 	background: var(--color-acnt);
+	border-color: var(--color-acnt);
 	color: var(--color-back);
+}
+
+.tag, .pagination > button {
+	background-color: var(--color-fore);
+	border: 1px solid var(--color-line);
+	border-radius: var(--radius-tag);
+	padding: var(--padding-tag);
+	cursor: pointer;
 }

@@ -4,7 +4,7 @@ import { define as definePages, RampikePagination } from "./components/paginatio
 import { State } from "./types";
 import { attachDash } from "./dash";
 import { hashToState, updateURL } from "./url";
-import { fromTemplateFirst, rampike, Rampike } from "rampike";
+import { fromTemplateFirst, mudcrack, rampike, Rampike } from "rampike";
 
 start();
 
@@ -45,20 +45,26 @@ async function main() {
 
 function attachListeners(state: State) {
 	const tabsMain = document.querySelector<RampikeTabs>("rampike-tabs#rp-tabs-main");
-	const tabsSide = document.querySelector<RampikeTabs>("rampike-tabs#rp-tabs-side");
+	// const tabsSide = document.querySelector<RampikeTabs>("rampike-tabs#rp-tabs-side");
 	document.querySelectorAll<HTMLElement>("[data-tab]").forEach(e => {
-		const target = e.dataset.for === "rp-tabs-main" ? tabsMain : tabsSide;
+		// const target = e.dataset.for === "rp-tabs-main" ? tabsMain : tabsSide;
+		const target = tabsMain;
 		e.addEventListener("click", () => target.tab = e.dataset.tab);
 	});
 	attachDash(state, () => loadPage(state, true));
 
 	const searchBar = document.querySelector<HTMLInputElement>("input#search-bar");
 	const searchButton = document.querySelector<HTMLElement>("#search-button");
-	searchButton.addEventListener("click", () => {
+	const searchCall = () => {
 		const term = searchBar.value.trim().toLowerCase();
 		const tag = state.tags.find(t => t.name === term);
 		if (!tag) return;
 		pickTag(state, tag.id);
+	};
+	searchButton.addEventListener("click", searchCall);
+	searchBar.addEventListener("keydown", e => {
+		if (e.key !== "Enter") return;
+		searchCall();
 	});
 	document.querySelector<HTMLElement>("#search-reset")?.addEventListener("click", () => {
 		searchBar.value = "";
@@ -82,8 +88,12 @@ async function updateTags(state: State) {
 	let list = document.querySelector("datalist#list-tags");
 	if (list) list.innerHTML = "";
 	else {
-		list = document.createElement("datalist");
-		list.id = "list-tags";
+		list = mudcrack({
+			tagName: "datalist",
+			attributes: {
+				id: "list-tags"
+			}
+		});
 		document.body.append(list);
 	}
 
@@ -99,15 +109,19 @@ async function updateTags(state: State) {
 	const searchBar = document.querySelector<HTMLInputElement>("#search-bar");
 	if (!buttonList || !searchBar) return;
 	buttonList.innerHTML = "";
-	buttonList.append(...t.map(tag => {
-		const item = document.createElement("button");
-		item.textContent = `${tag.name} (${tag.count})`;
-		item.addEventListener("click", () => {
-			searchBar.value = tag.name;
-			pickTag(state, tag.id);
-		});
-		return item;
-	}));
+	buttonList.append(...t.map(tag => 
+		mudcrack({
+			tagName: "button",
+			className: "tag",
+			contents: `${tag.name} (${tag.count})`,
+			events: {
+				click: () => {
+					searchBar.value = tag.name;
+					pickTag(state, tag.id);
+				}
+			}
+		})
+	));
 }
 
 async function loadPage(state: State, skipHashChange: boolean = false) {
@@ -183,21 +197,25 @@ function makePost(state: State, post: Post) {
 
 		tags.innerHTML = "";
 		tags.hidden = params.tags.length === 0;
-		tags.append(...params.tags.map(({ name, id }) => {
-			const e = document.createElement("button");
-			e.textContent = name;
-			e.addEventListener("click", () => pickTag(state, id));
-			e.addEventListener("mousedown", e => {
-				e.preventDefault();
-				if (!state.auth) return true;
-				untag(params.id, id).then(() => {
-					updateTags(state);
-					updatePage(state);
-				});
-				return false;
+		tags.append(...params.tags.map(({ name, id }) =>
+			mudcrack({
+				tagName: "div",
+				className: "tag",
+				contents: name,
+				events: {
+					"click": () => pickTag(state, id),
+					"mousedown": e => {
+						e.preventDefault();
+						if (!state.auth) return true;
+						untag(params.id, id).then(() => {
+							updateTags(state);
+							updatePage(state);
+						});
+						return false;
+					}
+				}
 			})
-			return e;
-		}));
+		));
 
 		adder.hidden = !state.auth;
 		if (!adderListenerAttached) {
