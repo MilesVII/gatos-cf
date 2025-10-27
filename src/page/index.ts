@@ -172,10 +172,9 @@ function makePost(state: State, post: Post) {
 	let adderListenerAttached = false;
 
 	return rampike<HTMLDivElement, Post>(fromTemplateFirst(postTemplate), post, (params, root) => {
-		const [image, caption, _hr, tags, adder, source] = Array.from(root.children) as [
+		const [image, caption, tags, adder, source] = Array.from(root.children) as [
 			HTMLDivElement,
 			HTMLDivElement,
-			void,
 			HTMLDivElement,
 			HTMLInputElement,
 			HTMLAnchorElement
