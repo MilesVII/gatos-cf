@@ -124,6 +124,7 @@ a, a:visited {
 
 .butt {
 	background: var(--color-main);
+	font: var(--font-butt);
 	color: white;
 	padding: var(--padding-button);
 	border-radius: var(--radius-button);
@@ -183,6 +184,8 @@ a, a:visited {
 	display: grid;
 	grid-template-columns: repeat(min(var(--media-count), 3), auto);
 	justify-items: center;
+	align-items: center;
+	gap: var(--gap-list);
 }
 .post-caption {
 	font: var(--font-butt);
@@ -193,12 +196,10 @@ a, a:visited {
 	display: flex;
 	flex-flow: row wrap;
 	gap: var(--gap);
+	margin-top: auto;
 }
 .post-tags > * {
 	background-color: var(--color-main);
-}
-.post hr {
-	margin-top: auto;
 }
 
 .tags-list {
