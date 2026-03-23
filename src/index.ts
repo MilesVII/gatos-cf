@@ -147,7 +147,7 @@ function pickRoute(pathname: string): (keyof typeof routes) | null {
 
 function pickCookie(raw: string, key: string): null | string {
 	const v = raw
-		.split("\n")
+		.split(";")
 		.map(entry =>
 			entry.trim().split("=")
 		)

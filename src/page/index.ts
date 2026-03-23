@@ -204,8 +204,8 @@ function makePost(state: State, post: Post) {
 				events: {
 					"click": () => pickTag(state, id),
 					"mousedown": e => {
+						if (e.button !== 2 || !state.auth) return true;
 						e.preventDefault();
-						if (!state.auth) return true;
 						untag(params.id, id).then(() => {
 							updateTags(state);
 							updatePage(state);
